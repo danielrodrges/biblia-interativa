@@ -1,16 +1,56 @@
 // Integração com Supabase para obter conteúdo bíblico completo
 import { createClient } from '@supabase/supabase-js';
 import { BibleVerseData } from './types';
+import { isSupabaseConfigured } from './supabase';
 
-// Inicializar cliente Supabase
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+// Cliente Supabase singleton (criado apenas uma vez no browser)
+let supabaseClient: ReturnType<typeof createClient> | null = null;
 
-let supabase: ReturnType<typeof createClient> | null = null;
+// Função para criar cliente Supabase de forma segura (apenas no browser)
+function getSupabaseClient() {
+  // CRÍTICO: Verificar se está no browser E se ainda não foi criado
+  if (typeof window === 'undefined') {
+    return null;
+  }
 
-// Criar cliente apenas no lado do cliente (browser)
-if (typeof window !== 'undefined' && supabaseUrl && supabaseKey) {
-  supabase = createClient(supabaseUrl, supabaseKey);
+  // Verificar se Supabase está configurado
+  if (!isSupabaseConfigured()) {
+    console.log('⚠️ Supabase não configurado - usando dados locais');
+    return null;
+  }
+
+  // Se já foi criado, retornar instância existente
+  if (supabaseClient) {
+    return supabaseClient;
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.warn('⚠️ Variáveis de ambiente do Supabase não configuradas');
+    return null;
+  }
+
+  // Validação adicional das credenciais
+  if (!supabaseUrl.startsWith('https://') || !supabaseUrl.includes('.supabase.co')) {
+    console.warn('⚠️ URL do Supabase inválida');
+    return null;
+  }
+
+  if (supabaseKey.length < 20) {
+    console.warn('⚠️ Chave do Supabase inválida');
+    return null;
+  }
+
+  try {
+    supabaseClient = createClient(supabaseUrl, supabaseKey);
+    console.log('✅ Cliente Supabase criado com sucesso');
+    return supabaseClient;
+  } catch (error) {
+    console.error('❌ Erro ao criar cliente Supabase:', error);
+    return null;
+  }
 }
 
 /**
@@ -28,6 +68,7 @@ function normalizeLanguageCode(code: string): string {
 
 /**
  * Busca um capítulo completo da Bíblia via Supabase
+ * IMPORTANTE: Retorna array vazio durante SSR/build para evitar erros 403
  */
 export async function fetchChapterFromAPI(
   languageCode: string,
@@ -35,16 +76,29 @@ export async function fetchChapterFromAPI(
   bookId: string,
   chapter: number
 ): Promise<BibleVerseData[]> {
-  // Verificar se está no browser e se o Supabase está configurado
-  if (typeof window === 'undefined' || !supabase) {
-    console.log('Supabase não disponível - usando dados locais');
+  // CRÍTICO: Retornar vazio se não estiver no browser
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
+  // Verificar se Supabase está configurado ANTES de tentar criar cliente
+  if (!isSupabaseConfigured()) {
+    console.log('📖 Supabase não configurado - usando dados locais');
+    return [];
+  }
+
+  // Criar cliente apenas quando necessário
+  const supabase = getSupabaseClient();
+  
+  if (!supabase) {
+    console.log('📖 Cliente Supabase não disponível - usando dados locais');
     return [];
   }
 
   try {
     const lang = normalizeLanguageCode(languageCode);
     
-    console.log('Buscando versículos:', { lang, versionId, bookId, chapter });
+    console.log('🔍 Buscando versículos:', { lang, versionId, bookId, chapter });
     
     const { data, error } = await supabase
       .from('bible_verses')
@@ -56,16 +110,16 @@ export async function fetchChapterFromAPI(
       .order('verse', { ascending: true });
 
     if (error) {
-      console.error('Erro ao buscar do Supabase:', error);
+      console.error('❌ Erro ao buscar do Supabase:', error);
       return [];
     }
 
     if (!data || data.length === 0) {
-      console.log('Nenhum versículo encontrado no Supabase');
+      console.log('📭 Nenhum versículo encontrado no Supabase');
       return [];
     }
 
-    console.log(`${data.length} versículos encontrados no Supabase`);
+    console.log(`✅ ${data.length} versículos encontrados no Supabase`);
 
     // Remover duplicatas mantendo apenas o primeiro de cada versículo
     const uniqueVerses = new Map<number, any>();
@@ -85,13 +139,14 @@ export async function fetchChapterFromAPI(
       language: row.language
     }));
   } catch (error) {
-    console.error('Erro ao buscar capítulo:', error);
+    console.error('❌ Erro ao buscar capítulo:', error);
     return [];
   }
 }
 
 /**
  * Busca versículos bilíngues de um capítulo
+ * IMPORTANTE: Retorna array vazio durante SSR/build para evitar erros 403
  */
 export async function fetchBilingualChapter(
   nativeLanguage: string,
@@ -101,13 +156,26 @@ export async function fetchBilingualChapter(
   bookId: string,
   chapter: number
 ): Promise<Array<{ native: BibleVerseData; learning: BibleVerseData }>> {
-  if (typeof window === 'undefined' || !supabase) {
-    console.log('Supabase não disponível - usando dados locais');
+  // CRÍTICO: Retornar vazio se não estiver no browser
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
+  // Verificar se Supabase está configurado
+  if (!isSupabaseConfigured()) {
+    console.log('📖 Supabase não configurado - usando dados locais');
+    return [];
+  }
+
+  const supabase = getSupabaseClient();
+  
+  if (!supabase) {
+    console.log('📖 Cliente Supabase não disponível - usando dados locais');
     return [];
   }
 
   try {
-    console.log('Buscando capítulo bilíngue:', { 
+    console.log('🔍 Buscando capítulo bilíngue:', { 
       nativeLanguage, 
       nativeVersion, 
       learningLanguage, 
@@ -122,11 +190,11 @@ export async function fetchBilingualChapter(
       fetchChapterFromAPI(learningLanguage, learningVersion, bookId, chapter)
     ]);
 
-    console.log('Versículos nativos:', nativeVerses.length);
-    console.log('Versículos de aprendizado:', learningVerses.length);
+    console.log(`📊 Versículos nativos: ${nativeVerses.length}`);
+    console.log(`📊 Versículos de aprendizado: ${learningVerses.length}`);
 
     if (nativeVerses.length === 0 || learningVerses.length === 0) {
-      console.log('Um dos idiomas não tem versículos disponíveis');
+      console.log('⚠️ Um dos idiomas não tem versículos disponíveis');
       return [];
     }
 
@@ -143,17 +211,18 @@ export async function fetchBilingualChapter(
       }
     }
 
-    console.log('Versículos bilíngues combinados:', bilingualVerses.length);
+    console.log(`✅ ${bilingualVerses.length} versículos bilíngues combinados`);
 
     return bilingualVerses;
   } catch (error) {
-    console.error('Erro ao buscar capítulo bilíngue:', error);
+    console.error('❌ Erro ao buscar capítulo bilíngue:', error);
     return [];
   }
 }
 
 /**
  * Verifica se um capítulo específico está disponível no Supabase
+ * IMPORTANTE: Retorna indisponível durante SSR/build para evitar erros 403
  */
 export async function checkChapterAvailability(
   languageCode: string,
@@ -161,11 +230,31 @@ export async function checkChapterAvailability(
   bookId: string,
   chapter: number
 ): Promise<{ available: boolean; verseCount: number; message: string }> {
-  if (typeof window === 'undefined' || !supabase) {
+  // CRÍTICO: Retornar indisponível se não estiver no browser
+  if (typeof window === 'undefined') {
+    return {
+      available: false,
+      verseCount: 0,
+      message: 'Verificação disponível apenas no cliente'
+    };
+  }
+
+  // Verificar se Supabase está configurado
+  if (!isSupabaseConfigured()) {
     return {
       available: false,
       verseCount: 0,
       message: 'Supabase não configurado'
+    };
+  }
+
+  const supabase = getSupabaseClient();
+  
+  if (!supabase) {
+    return {
+      available: false,
+      verseCount: 0,
+      message: 'Cliente Supabase não disponível'
     };
   }
 
