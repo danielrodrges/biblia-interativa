@@ -1,0 +1,21 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/bible/route": "app/api/bible/route.js",
+  "/icon.svg/route": "app/icon.svg/route.js",
+  "/apostolos/[apostolo]/[plano]/capitulo/[numero]/page": "app/apostolos/[apostolo]/[plano]/capitulo/[numero]/page.js",
+  "/apostolos/[apostolo]/[plano]/page": "app/apostolos/[apostolo]/[plano]/page.js",
+  "/apostolos/page": "app/apostolos/page.js",
+  "/apostolos/[apostolo]/[plano]/exercicio/[afterChapter]/page": "app/apostolos/[apostolo]/[plano]/exercicio/[afterChapter]/page.js",
+  "/auth/forgot-password/page": "app/auth/forgot-password/page.js",
+  "/auth/callback/page": "app/auth/callback/page.js",
+  "/auth/signup/page": "app/auth/signup/page.js",
+  "/bible-demo/page": "app/bible-demo/page.js",
+  "/configuracoes/page": "app/configuracoes/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/exercicios/page": "app/exercicios/page.js",
+  "/inicio/page": "app/inicio/page.js",
+  "/leitura/page": "app/leitura/page.js",
+  "/onboarding/page": "app/onboarding/page.js",
+  "/page": "app/page.js",
+  "/praticar/page": "app/praticar/page.js"
+}

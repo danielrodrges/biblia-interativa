@@ -1,0 +1,184 @@
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization, X-Requested-With, Accept"
+        },
+        {
+          "key": "Access-Control-Allow-Credentials",
+          "value": "true"
+        }
+      ],
+      "regex": "^(?:/(.*))(?:/)?$"
+    }
+  ],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/apostolos/[apostolo]/[plano]",
+      "regex": "^/apostolos/([^/]+?)/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPapostolo": "nxtPapostolo",
+        "nxtPplano": "nxtPplano"
+      },
+      "namedRegex": "^/apostolos/(?<nxtPapostolo>[^/]+?)/(?<nxtPplano>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/apostolos/[apostolo]/[plano]/capitulo/[numero]",
+      "regex": "^/apostolos/([^/]+?)/([^/]+?)/capitulo/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPapostolo": "nxtPapostolo",
+        "nxtPplano": "nxtPplano",
+        "nxtPnumero": "nxtPnumero"
+      },
+      "namedRegex": "^/apostolos/(?<nxtPapostolo>[^/]+?)/(?<nxtPplano>[^/]+?)/capitulo/(?<nxtPnumero>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/apostolos/[apostolo]/[plano]/exercicio/[afterChapter]",
+      "regex": "^/apostolos/([^/]+?)/([^/]+?)/exercicio/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPapostolo": "nxtPapostolo",
+        "nxtPplano": "nxtPplano",
+        "nxtPafterChapter": "nxtPafterChapter"
+      },
+      "namedRegex": "^/apostolos/(?<nxtPapostolo>[^/]+?)/(?<nxtPplano>[^/]+?)/exercicio/(?<nxtPafterChapter>[^/]+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/apostolos",
+      "regex": "^/apostolos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/apostolos(?:/)?$"
+    },
+    {
+      "page": "/auth/callback",
+      "regex": "^/auth/callback(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/callback(?:/)?$"
+    },
+    {
+      "page": "/auth/forgot-password",
+      "regex": "^/auth/forgot\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/forgot\\-password(?:/)?$"
+    },
+    {
+      "page": "/auth/login",
+      "regex": "^/auth/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/login(?:/)?$"
+    },
+    {
+      "page": "/auth/signup",
+      "regex": "^/auth/signup(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/signup(?:/)?$"
+    },
+    {
+      "page": "/bible-demo",
+      "regex": "^/bible\\-demo(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/bible\\-demo(?:/)?$"
+    },
+    {
+      "page": "/configuracoes",
+      "regex": "^/configuracoes(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/configuracoes(?:/)?$"
+    },
+    {
+      "page": "/exercicios",
+      "regex": "^/exercicios(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/exercicios(?:/)?$"
+    },
+    {
+      "page": "/icon.svg",
+      "regex": "^/icon\\.svg(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/icon\\.svg(?:/)?$"
+    },
+    {
+      "page": "/inicio",
+      "regex": "^/inicio(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/inicio(?:/)?$"
+    },
+    {
+      "page": "/leitura",
+      "regex": "^/leitura(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/leitura(?:/)?$"
+    },
+    {
+      "page": "/onboarding",
+      "regex": "^/onboarding(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/onboarding(?:/)?$"
+    },
+    {
+      "page": "/praticar",
+      "regex": "^/praticar(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/praticar(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "RSC",
+    "varyHeader": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch",
+    "prefetchHeader": "Next-Router-Prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "Next-Router-Segment-Prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments"
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

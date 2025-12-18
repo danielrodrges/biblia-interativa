@@ -1,0 +1,21 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/api/bible/route": "/api/bible",
+  "/icon.svg/route": "/icon.svg",
+  "/apostolos/[apostolo]/[plano]/capitulo/[numero]/page": "/apostolos/[apostolo]/[plano]/capitulo/[numero]",
+  "/apostolos/[apostolo]/[plano]/page": "/apostolos/[apostolo]/[plano]",
+  "/apostolos/page": "/apostolos",
+  "/apostolos/[apostolo]/[plano]/exercicio/[afterChapter]/page": "/apostolos/[apostolo]/[plano]/exercicio/[afterChapter]",
+  "/auth/forgot-password/page": "/auth/forgot-password",
+  "/auth/callback/page": "/auth/callback",
+  "/auth/signup/page": "/auth/signup",
+  "/bible-demo/page": "/bible-demo",
+  "/configuracoes/page": "/configuracoes",
+  "/auth/login/page": "/auth/login",
+  "/exercicios/page": "/exercicios",
+  "/inicio/page": "/inicio",
+  "/leitura/page": "/leitura",
+  "/onboarding/page": "/onboarding",
+  "/page": "/",
+  "/praticar/page": "/praticar"
+}

@@ -1,0 +1,162 @@
+{
+  "pages": {
+    "/_not-found/page": [
+      "static/chunks/webpack-454d5368a2c0c17e.js",
+      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
+      "static/chunks/964-7a34cadcb7695cec.js",
+      "static/chunks/main-app-242439da4d7c7e51.js",
+      "static/chunks/app/_not-found/page-f676c58dcc195819.js"
+    ],
+    "/layout": [
+      "static/chunks/webpack-454d5368a2c0c17e.js",
+      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
+      "static/chunks/964-7a34cadcb7695cec.js",
+      "static/chunks/main-app-242439da4d7c7e51.js",
+      "static/css/081a0afca5a9bd20.css",
+      "static/css/dc5b490cba656919.css",
+      "static/chunks/95-f8676a3bee788818.js",
+      "static/chunks/app/layout-9db325dd31da0b89.js"
+    ],
+    "/api/bible/route": [
+      "static/chunks/webpack-454d5368a2c0c17e.js",
+      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
+      "static/chunks/964-7a34cadcb7695cec.js",
+      "static/chunks/main-app-242439da4d7c7e51.js",
+      "static/chunks/app/api/bible/route-109c6168fc79fc4e.js"
+    ],
+    "/apostolos/[apostolo]/[plano]/capitulo/[numero]/page": [
+      "static/chunks/webpack-454d5368a2c0c17e.js",
+      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
+      "static/chunks/964-7a34cadcb7695cec.js",
+      "static/chunks/main-app-242439da4d7c7e51.js",
+      "static/chunks/95-f8676a3bee788818.js",
+      "static/chunks/805-53705666f2ffe8e3.js",
+      "static/chunks/app/apostolos/[apostolo]/[plano]/capitulo/[numero]/page-474c29c3e28dbd36.js"
+    ],
+    "/apostolos/[apostolo]/[plano]/page": [
+      "static/chunks/webpack-454d5368a2c0c17e.js",
+      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
+      "static/chunks/964-7a34cadcb7695cec.js",
+      "static/chunks/main-app-242439da4d7c7e51.js",
+      "static/chunks/95-f8676a3bee788818.js",
+      "static/chunks/805-53705666f2ffe8e3.js",
+      "static/chunks/app/apostolos/[apostolo]/[plano]/page-fda75137467def79.js"
+    ],
+    "/apostolos/page": [
+      "static/chunks/webpack-454d5368a2c0c17e.js",
+      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
+      "static/chunks/964-7a34cadcb7695cec.js",
+      "static/chunks/main-app-242439da4d7c7e51.js",
+      "static/chunks/95-f8676a3bee788818.js",
+      "static/chunks/805-53705666f2ffe8e3.js",
+      "static/chunks/app/apostolos/page-857c78d23329446e.js"
+    ],
+    "/apostolos/[apostolo]/[plano]/exercicio/[afterChapter]/page": [
+      "static/chunks/webpack-454d5368a2c0c17e.js",
+      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
+      "static/chunks/964-7a34cadcb7695cec.js",
+      "static/chunks/main-app-242439da4d7c7e51.js",
+      "static/chunks/95-f8676a3bee788818.js",
+      "static/chunks/805-53705666f2ffe8e3.js",
+      "static/chunks/app/apostolos/[apostolo]/[plano]/exercicio/[afterChapter]/page-7926680c62671902.js"
+    ],
+    "/auth/forgot-password/page": [
+      "static/chunks/webpack-454d5368a2c0c17e.js",
+      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
+      "static/chunks/964-7a34cadcb7695cec.js",
+      "static/chunks/main-app-242439da4d7c7e51.js",
+      "static/chunks/95-f8676a3bee788818.js",
+      "static/chunks/30-2e937aefa78c82f9.js",
+      "static/chunks/app/auth/forgot-password/page-b08c1d4cea258322.js"
+    ],
+    "/auth/callback/page": [
+      "static/chunks/webpack-454d5368a2c0c17e.js",
+      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
+      "static/chunks/964-7a34cadcb7695cec.js",
+      "static/chunks/main-app-242439da4d7c7e51.js",
+      "static/chunks/30-2e937aefa78c82f9.js",
+      "static/chunks/app/auth/callback/page-f743dbc869099c79.js"
+    ],
+    "/auth/signup/page": [
+      "static/chunks/webpack-454d5368a2c0c17e.js",
+      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
+      "static/chunks/964-7a34cadcb7695cec.js",
+      "static/chunks/main-app-242439da4d7c7e51.js",
+      "static/chunks/95-f8676a3bee788818.js",
+      "static/chunks/30-2e937aefa78c82f9.js",
+      "static/chunks/app/auth/signup/page-11efa6bf36eea233.js"
+    ],
+    "/bible-demo/page": [
+      "static/chunks/webpack-454d5368a2c0c17e.js",
+      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
+      "static/chunks/964-7a34cadcb7695cec.js",
+      "static/chunks/main-app-242439da4d7c7e51.js",
+      "static/chunks/95-f8676a3bee788818.js",
+      "static/chunks/626-38d0f3dc9ef2c823.js",
+      "static/chunks/app/bible-demo/page-81faaef9ed6530c5.js"
+    ],
+    "/configuracoes/page": [
+      "static/chunks/webpack-454d5368a2c0c17e.js",
+      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
+      "static/chunks/964-7a34cadcb7695cec.js",
+      "static/chunks/main-app-242439da4d7c7e51.js",
+      "static/chunks/app/configuracoes/page-9935dbb74125db6b.js"
+    ],
+    "/auth/login/page": [
+      "static/chunks/webpack-454d5368a2c0c17e.js",
+      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
+      "static/chunks/964-7a34cadcb7695cec.js",
+      "static/chunks/main-app-242439da4d7c7e51.js",
+      "static/chunks/95-f8676a3bee788818.js",
+      "static/chunks/30-2e937aefa78c82f9.js",
+      "static/chunks/app/auth/login/page-ada7b500ca514983.js"
+    ],
+    "/exercicios/page": [
+      "static/chunks/webpack-454d5368a2c0c17e.js",
+      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
+      "static/chunks/964-7a34cadcb7695cec.js",
+      "static/chunks/main-app-242439da4d7c7e51.js",
+      "static/chunks/95-f8676a3bee788818.js",
+      "static/chunks/805-53705666f2ffe8e3.js",
+      "static/chunks/app/exercicios/page-e2d9ab77a88c2186.js"
+    ],
+    "/inicio/page": [
+      "static/chunks/webpack-454d5368a2c0c17e.js",
+      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
+      "static/chunks/964-7a34cadcb7695cec.js",
+      "static/chunks/main-app-242439da4d7c7e51.js",
+      "static/chunks/app/inicio/page-f91d82545f128b0e.js"
+    ],
+    "/leitura/page": [
+      "static/chunks/webpack-454d5368a2c0c17e.js",
+      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
+      "static/chunks/964-7a34cadcb7695cec.js",
+      "static/chunks/main-app-242439da4d7c7e51.js",
+      "static/chunks/30-2e937aefa78c82f9.js",
+      "static/chunks/626-38d0f3dc9ef2c823.js",
+      "static/chunks/app/leitura/page-921ee9ac0f62e025.js"
+    ],
+    "/onboarding/page": [
+      "static/chunks/webpack-454d5368a2c0c17e.js",
+      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
+      "static/chunks/964-7a34cadcb7695cec.js",
+      "static/chunks/main-app-242439da4d7c7e51.js",
+      "static/chunks/app/onboarding/page-b63d96cbd3aa6ba5.js"
+    ],
+    "/page": [
+      "static/chunks/webpack-454d5368a2c0c17e.js",
+      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
+      "static/chunks/964-7a34cadcb7695cec.js",
+      "static/chunks/main-app-242439da4d7c7e51.js",
+      "static/chunks/30-2e937aefa78c82f9.js",
+      "static/chunks/app/page-5949e34d769b5bef.js"
+    ],
+    "/praticar/page": [
+      "static/chunks/webpack-454d5368a2c0c17e.js",
+      "static/chunks/4bd1b696-cf72ae8a39fa05aa.js",
+      "static/chunks/964-7a34cadcb7695cec.js",
+      "static/chunks/main-app-242439da4d7c7e51.js",
+      "static/chunks/app/praticar/page-173f3bee5cc4ef06.js"
+    ]
+  }
+}
