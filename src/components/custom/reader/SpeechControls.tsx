@@ -22,7 +22,7 @@ export default function SpeechControls({
 }: SpeechControlsProps) {
   if (!isSupported) {
     return (
-      <div className="fixed bottom-20 left-0 right-0 z-40 bg-amber-100 dark:bg-amber-900 border-t border-amber-200 dark:border-amber-800 p-3">
+      <div className="flex-shrink-0 bg-amber-100 dark:bg-amber-900 border-t border-amber-200 dark:border-amber-800 p-3 z-40">
         <div className="max-w-[720px] mx-auto text-center">
           <p className="text-sm text-amber-800 dark:text-amber-200">
             ⚠️ Seu navegador não suporta síntese de voz
@@ -36,8 +36,8 @@ export default function SpeechControls({
   const isPaused = state === 'paused';
 
   return (
-    <div className="fixed bottom-20 left-0 right-0 z-40 bg-white/98 dark:bg-gray-900/98 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 shadow-lg">
-      <div className="max-w-[720px] mx-auto px-6 py-3">
+    <div className="flex-shrink-0 bg-white/98 dark:bg-gray-900/98 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 shadow-lg z-40">
+      <div className="max-w-[720px] mx-auto px-4 py-3">
         <div className="flex items-center justify-center gap-4">
           {/* Ícone de Volume */}
           <Volume2 className="w-5 h-5 text-gray-400" />

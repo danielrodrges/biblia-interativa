@@ -179,11 +179,13 @@ export default function ReaderPage() {
         </div>
       ) : chapterData ? (
         <>
-          <ReaderContent
+          <div className=\"flex-1 overflow-y-auto overflow-x-hidden scrollable-content\">
+            <ReaderContent
             verses={chapterData.verses}
             fontSize={prefs.readerFontSize}
             highlightedIndex={speechState === 'speaking' ? currentIndex : -1}
           />
+          </div>
         </>
       ) : null}
 
@@ -200,8 +202,8 @@ export default function ReaderPage() {
       )}
 
       {/* Navegação de Capítulos */}
-      <div className="fixed bottom-20 left-0 right-0 z-40 bg-white/98 dark:bg-gray-900/98 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 shadow-lg">
-        <div className="max-w-[720px] mx-auto px-6 py-4 flex items-center justify-center gap-6">
+      <div className="flex-shrink-0 bg-white/98 dark:bg-gray-900/98 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 shadow-lg safe-area-bottom z-40">
+        <div className="max-w-[720px] mx-auto px-4 py-3 flex items-center justify-center gap-4">
           <button
             onClick={handlePreviousChapter}
             disabled={!canGoPrevious()}

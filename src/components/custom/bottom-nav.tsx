@@ -15,9 +15,9 @@ export default function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 safe-area-bottom z-30">
+    <nav className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 safe-area-bottom z-50 flex-shrink-0">
       <div className="max-w-lg mx-auto px-2">
-        <div className="flex items-center justify-around h-16">
+        <div className="flex items-center justify-around h-14">
           {navItems.map((item) => {
             const isActive = pathname === item.href || 
                             (item.href === '/leitura' && pathname?.startsWith('/leitura/'));

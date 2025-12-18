@@ -29,8 +29,8 @@ export default function InicioPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white px-6 py-6">
-      <div className="max-w-lg mx-auto">
+    <div className="h-full w-full overflow-y-auto scrollable-content bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-950 px-4 py-6 md:px-6">
+      <div className="max-w-lg mx-auto pb-6">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">

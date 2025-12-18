@@ -27,15 +27,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" className="h-full">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body className={`${inter.variable} font-inter antialiased bg-gray-50`}>
-        <div className="min-h-screen pb-16">
-          {children}
+      <body className={`${inter.variable} font-inter antialiased bg-white dark:bg-gray-950 h-full overflow-hidden`}>
+        <div className="h-full flex flex-col">
+          <div className="flex-1 overflow-hidden">
+            {children}
+          </div>
+          <BottomNav />
         </div>
-        <BottomNav />
       </body>
     </html>
   );

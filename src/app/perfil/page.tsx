@@ -45,7 +45,7 @@ export default function PerfilPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white px-6 py-6 pb-24">
+    <div className="h-full w-full overflow-y-auto scrollable-content bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-950 px-4 py-6 pb-8 md:px-6">
       <div className="max-w-lg mx-auto">
         {/* Header */}
         <div className="mb-8">

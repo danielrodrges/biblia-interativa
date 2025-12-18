@@ -19,9 +19,9 @@ const fontSizeClasses = {
 
 export default function ReaderContent({ verses, fontSize, highlightedIndex = -1 }: ReaderContentProps) {
   return (
-    <div className="flex-1 overflow-y-auto px-6 py-8 scroll-smooth">
-      <div className="max-w-[720px] mx-auto">
-        <div className={`space-y-4 ${fontSizeClasses[fontSize]} text-gray-800 dark:text-gray-200`}>
+    <div className="h-full w-full px-4 py-6 md:px-6 md:py-8">
+      <div className="max-w-[720px] mx-auto h-full">
+        <div className={`space-y-4 ${fontSizeClasses[fontSize]} text-gray-900 dark:text-gray-100`}>
           {verses.map((verse, index) => (
             <p 
               key={verse.number} 

@@ -25,7 +25,7 @@ export default function PraticarPage() {
 
   if (!preferences) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center h-full">
         <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -50,7 +50,7 @@ export default function PraticarPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white px-6 py-6">
+    <div className="h-full w-full overflow-y-auto scrollable-content bg-gradient-to-b from-amber-50 to-white dark:from-gray-900 dark:to-gray-950 px-4 py-6 md:px-6">
       <div className="max-w-lg mx-auto">
         {/* Header */}
         <div className="mb-8">
