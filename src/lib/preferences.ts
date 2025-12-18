@@ -10,9 +10,12 @@ export const defaultPreferences: UserPreferences = {
   nativeVersion: null,
   learningVersion: null,
   fontSize: 'medium',
-  readingMode: 'both',
+  readingMode: 'single',
   lastReading: null,
   onboardingCompleted: false,
+  // Nova propriedade para idioma e versão preferida
+  preferredLanguage: null,
+  preferredBibleVersion: null,
 };
 
 export function getPreferences(): UserPreferences {
@@ -63,4 +66,28 @@ export function getFontSizeClass(size: 'small' | 'medium' | 'large'): string {
     default:
       return 'text-lg';
   }
+}
+
+/**
+ * Retorna o idioma preferido do usuário
+ */
+export function getPreferredLanguage(): string | null {
+  const prefs = getPreferences();
+  return prefs.preferredLanguage || null;
+}
+
+/**
+ * Retorna a versão da Bíblia preferida do usuário
+ */
+export function getPreferredBibleVersion(): string | null {
+  const prefs = getPreferences();
+  return prefs.preferredBibleVersion || null;
+}
+
+/**
+ * Verifica se o usuário já configurou suas preferências
+ */
+export function hasUserPreferences(): boolean {
+  const prefs = getPreferences();
+  return !!(prefs.preferredLanguage && prefs.preferredBibleVersion);
 }

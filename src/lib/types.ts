@@ -37,12 +37,15 @@ export interface UserPreferences {
   nativeVersion: BibleVersion | null;
   learningVersion: BibleVersion | null;
   fontSize: 'small' | 'medium' | 'large';
-  readingMode: 'native' | 'learning' | 'both';
+  readingMode: 'native' | 'learning' | 'both' | 'single';
   lastReading: {
     book: string;
     chapter: number;
   } | null;
   onboardingCompleted: boolean;
+  // Nova estrutura simplificada
+  preferredLanguage?: string | null;  // código do idioma: pt-BR, en-US, etc
+  preferredBibleVersion?: string | null;  // ID da versão: NVI, KJV, etc
 }
 
 export interface VocabularyWord {
