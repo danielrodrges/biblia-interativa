@@ -12,6 +12,7 @@ const BIBLE_VERSION_IDS: Record<string, string> = {
   'ARC': 'de4e12af7f28f599-02',  // ARC em Português
   'NTLH': '06125adad2d5898a-03', // NTLH em Português (placeholder)
   'NAA': '06125adad2d5898a-04',  // NAA em Português (placeholder)
+  'BLT': 'd63894c8d9a7a503-01',  // Bíblia Livre Para Todos
   
   // Inglês
   'KJV': 'de4e12af7f28f599-01',  // King James Version

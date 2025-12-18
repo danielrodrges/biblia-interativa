@@ -58,6 +58,16 @@ export const availableBibleVersions: BibleVersionData[] = [
     source_reference: 'Sociedade Bíblica do Brasil',
     is_available: true,
   },
+  {
+    version_id: 'BLT',
+    version_name: 'Bíblia Livre Para Todos',
+    language_code: 'pt-BR',
+    language_name: 'Português do Brasil',
+    description: 'Tradução livre e acessível para facilitar a compreensão',
+    year: 2012,
+    source_reference: 'BLT - Bible For Everyone',
+    is_available: true,
+  },
 
   // ========== INGLÊS ==========
   {

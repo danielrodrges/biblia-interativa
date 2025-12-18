@@ -12,12 +12,13 @@ export const availableLanguages: Language[] = [
 ];
 
 export const bibleVersions: BibleVersion[] = [
-  // Versões em Português (Brasil) - Top 5
+  // Versões em Português (Brasil) - Top 6
   { id: 'nvi-pt', languageCode: 'pt', name: 'Nova Versão Internacional', abbreviation: 'NVI' },
   { id: 'ara-pt', languageCode: 'pt', name: 'Almeida Revista e Atualizada', abbreviation: 'ARA' },
   { id: 'arc-pt', languageCode: 'pt', name: 'Almeida Revista e Corrigida', abbreviation: 'ARC' },
   { id: 'ntlh-pt', languageCode: 'pt', name: 'Nova Tradução na Linguagem de Hoje', abbreviation: 'NTLH' },
   { id: 'naa-pt', languageCode: 'pt', name: 'Nova Almeida Atualizada', abbreviation: 'NAA' },
+  { id: 'blt-pt', languageCode: 'pt', name: 'Bíblia Livre Para Todos', abbreviation: 'BLT' },
   
   // Versões em Inglês
   { id: 'kjv-en', languageCode: 'en', name: 'King James Version', abbreviation: 'KJV' },
