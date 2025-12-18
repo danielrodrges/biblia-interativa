@@ -14,6 +14,11 @@ export default function HomePage() {
     const checkAuth = async () => {
       try {
         const currentUser = await getCurrentUser();
+        if (currentUser) {
+          // Usuário autenticado, redirecionar para /inicio
+          router.push('/inicio');
+          return;
+        }
         setUser(currentUser);
       } catch (error) {
         console.error('Erro ao verificar autenticação:', error);
@@ -23,7 +28,7 @@ export default function HomePage() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
 
   if (isLoading) {
     return (
@@ -36,8 +41,8 @@ export default function HomePage() {
     );
   }
 
-  if (!user) {
-    return (
+  // Se chegou aqui, não há usuário autenticado - mostrar landing page
+  return (
       <div className="min-h-screen bg-gradient-to-b from-blue-50 via-purple-50 to-amber-50">
         {/* Header */}
         <header className="bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-50">
@@ -142,64 +147,4 @@ export default function HomePage() {
         </footer>
       </div>
     );
-  }
-
-  // Usuário autenticado - mostrar dashboard
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-amber-50">
-      <header className="bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <BookOpen className="w-8 h-8 text-blue-600" />
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Leitura Espiritual
-              </h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-600">Olá, {user.email}</span>
-              <button
-                onClick={() => router.push('/leitura')}
-                className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full hover:shadow-lg transition-all duration-300 hover:scale-105"
-              >
-                Começar Leitura
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-800 mb-4">
-            Bem-vindo de volta! 🙏
-          </h2>
-          <p className="text-xl text-gray-600">
-            Continue sua jornada de aprendizado espiritual
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-8">
-          <div
-            onClick={() => router.push('/leitura')}
-            className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105"
-          >
-            <BookOpen className="w-12 h-12 text-blue-600 mb-4" />
-            <h3 className="text-2xl font-bold text-gray-800 mb-3">Iniciar Leitura</h3>
-            <p className="text-gray-600">
-              Escolha seu idioma e comece a ler textos espirituais inspiradores
-            </p>
-          </div>
-
-          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
-            <Sparkles className="w-12 h-12 text-purple-600 mb-4" />
-            <h3 className="text-2xl font-bold text-gray-800 mb-3">Seu Progresso</h3>
-            <p className="text-gray-600">
-              Acompanhe seu desenvolvimento e conquistas no aprendizado
-            </p>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
 }
