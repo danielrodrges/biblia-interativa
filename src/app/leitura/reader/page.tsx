@@ -10,10 +10,10 @@ import { useReadingPrefs } from '@/hooks/useReadingPrefs';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useSubtitleSync } from '@/hooks/useSubtitleSync';
 import { loadBibleChapter, BibleChapter } from '@/lib/bible-loader';
-import { getNextChapter, getPreviousChapter, getBookByCode } from '@/lib/bible-navigation';
+import { getNextChapter, getPreviousChapter } from '@/lib/bible-navigation';
 import { mockSubtitles } from '@/mocks/subtitles';
 import { mockAudioUrl } from '@/mocks/audio';
-import { X, Type, Languages, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { X, Type, Languages, Loader2 } from 'lucide-react';
 
 export default function ReaderPage() {
   const router = useRouter();
@@ -82,6 +82,11 @@ export default function ReaderPage() {
     }
   };
 
+  const handleNavigateToChapter = (bookCode: string, chapter: number) => {
+    setCurrentBook(bookCode);
+    setCurrentChapter(chapter);
+  };
+
   const canGoPrevious = () => {
     return getPreviousChapter(currentBook, currentChapter) !== null;
   };
@@ -105,9 +110,10 @@ export default function ReaderPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col pb-36">
       <ReaderHeader
-        book={chapterData?.bookName || 'Carregando...'}
+        book={chapterData?.bookName || currentBook}
         chapter={currentChapter}
         onSettingsClick={() => setShowSettings(true)}
+        onNavigate={handleNavigateToChapter}
       />
 
       {isLoadingChapter ? (
@@ -135,36 +141,6 @@ export default function ReaderPage() {
             verses={chapterData.verses}
             fontSize={prefs.readerFontSize}
           />
-
-          {/* Navegação entre capítulos */}
-          <div className="fixed bottom-20 left-0 right-0 px-6 pb-4 bg-gradient-to-t from-gray-50 dark:from-gray-900 via-gray-50 dark:via-gray-900 to-transparent pointer-events-none">
-            <div className="max-w-4xl mx-auto flex justify-between gap-4 pointer-events-auto">
-              <button
-                onClick={handlePreviousChapter}
-                disabled={!canGoPrevious()}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                  !canGoPrevious()
-                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
-                    : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-md hover:shadow-lg'
-                }`}
-              >
-                <ChevronLeft className="w-5 h-5" />
-                Anterior
-              </button>
-              <button
-                onClick={handleNextChapter}
-                disabled={!canGoNext()}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                  !canGoNext()
-                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
-                    : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-md hover:shadow-lg'
-                }`}
-              >
-                Próximo
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
         </>
       ) : null}
 
