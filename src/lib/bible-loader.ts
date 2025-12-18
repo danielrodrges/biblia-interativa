@@ -6,6 +6,9 @@
 import { createClient } from '@supabase/supabase-js';
 import { fetchChapterFromGitHub, fetchVerseFromGitHub, GitHubBibleVersion } from './github-bible';
 import { fetchChapter as fetchChapterFromAPI, fetchVerse as fetchVerseFromAPI } from './scripture-api';
+import { BibleChapter, BibleVerse } from './types';
+import { BOOK_CODE_MAP } from './bible-books';
+import { bibleCache } from './bible-cache';
 
 // Criar cliente Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -139,7 +142,7 @@ const BOOK_CODE_MAP: Record<string, { github: string; api: string; name: string 
 
 /**
  * Carrega um capítulo completo da Bíblia
- * Prioridade: 1. Supabase, 2. GitHub, 3. Scripture API
+ * Prioridade: 1. Cache, 2. Supabase, 3. GitHub, 4. Scripture API
  */
 export async function loadBibleChapter(
   bookCode: string,
@@ -150,6 +153,12 @@ export async function loadBibleChapter(
   
   try {
     console.log(`📖 [${Date.now()}] Iniciando loadBibleChapter: ${bookCode} ${chapter} (${version})`);
+    
+    // VERIFICAR CACHE PRIMEIRO
+    const cached = bibleCache.get(bookCode, chapter, version);
+    if (cached) {
+      return cached;
+    }
     
     const bookInfo = BOOK_CODE_MAP[bookCode];
     
@@ -177,7 +186,7 @@ export async function loadBibleChapter(
         
         if (!error && data && data.length > 0) {
           console.log(`✅ [${supabaseTime}ms] Supabase retornou ${data.length} versículos`);
-          return {
+          const result = {
             book: bookCode,
             bookName: bookInfo.name,
             chapter,
@@ -187,6 +196,11 @@ export async function loadBibleChapter(
               text: verse.text,
             })),
           };
+          
+          // Armazenar no cache
+          bibleCache.set(bookCode, chapter, version, result);
+          
+          return result;
         } else if (error) {
           console.warn(`⚠️ Erro ao buscar no Supabase:`, error.message);
         } else {

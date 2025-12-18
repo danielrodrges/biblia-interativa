@@ -43,9 +43,9 @@ export default function ReaderPage() {
       setLoadError(null);
 
       try {
-        // Timeout de 10 segundos
+        // Timeout de 30 segundos (Supabase está lento devido a falta de índices)
         const timeoutPromise = new Promise<null>((_, reject) => 
-          setTimeout(() => reject(new Error('Tempo limite excedido - verifique sua conexão')), 10000)
+          setTimeout(() => reject(new Error('Tempo limite excedido - verifique sua conexão')), 30000)
         );
 
         console.log('📖 Chamando loadBibleChapter...');
