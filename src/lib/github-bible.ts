@@ -15,12 +15,10 @@ export type GitHubBibleVersion = keyof typeof GITHUB_BIBLE_VERSIONS;
 // Estrutura dos dados do repositório
 export interface GitHubBibleBook {
   abbrev: string;
-  book: string;
   chapters: string[][]; // chapters[chapterIndex][verseIndex]
 }
 
 export interface GitHubBibleVerse {
-  book: string;
   bookAbbrev: string;
   chapter: number;
   verse: number;
@@ -69,13 +67,12 @@ export async function fetchBibleVersion(version: GitHubBibleVersion): Promise<Gi
  */
 export async function fetchBook(
   version: GitHubBibleVersion,
-  bookName: string
+  bookAbbrev: string
 ): Promise<GitHubBibleBook | null> {
   const bible = await fetchBibleVersion(version);
   
   const book = bible.find(b => 
-    b.book.toLowerCase() === bookName.toLowerCase() ||
-    b.abbrev.toLowerCase() === bookName.toLowerCase()
+    b.abbrev.toLowerCase() === bookAbbrev.toLowerCase()
   );
   
   return book || null;
@@ -86,27 +83,26 @@ export async function fetchBook(
  */
 export async function fetchChapterFromGitHub(
   version: GitHubBibleVersion,
-  bookName: string,
+  bookAbbrev: string,
   chapterNumber: number
 ): Promise<GitHubBibleVerse[]> {
-  const book = await fetchBook(version, bookName);
+  const book = await fetchBook(version, bookAbbrev);
   
   if (!book) {
-    console.error(`Livro não encontrado: ${bookName}`);
+    console.error(`Livro não encontrado: ${bookAbbrev}`);
     return [];
   }
 
   const chapterIndex = chapterNumber - 1; // Arrays são 0-based
   
   if (chapterIndex < 0 || chapterIndex >= book.chapters.length) {
-    console.error(`Capítulo ${chapterNumber} não existe em ${book.book}`);
+    console.error(`Capítulo ${chapterNumber} não existe no livro ${book.abbrev}`);
     return [];
   }
 
   const verses = book.chapters[chapterIndex];
   
   return verses.map((text, index) => ({
-    book: book.book,
     bookAbbrev: book.abbrev,
     chapter: chapterNumber,
     verse: index + 1, // Versículos começam em 1
@@ -119,11 +115,11 @@ export async function fetchChapterFromGitHub(
  */
 export async function fetchVerseFromGitHub(
   version: GitHubBibleVersion,
-  bookName: string,
+  bookAbbrev: string,
   chapterNumber: number,
   verseNumber: number
 ): Promise<string | null> {
-  const chapter = await fetchChapterFromGitHub(version, bookName, chapterNumber);
+  const chapter = await fetchChapterFromGitHub(version, bookAbbrev, chapterNumber);
   
   const verse = chapter.find(v => v.verse === verseNumber);
   return verse ? verse.text : null;
@@ -132,11 +128,10 @@ export async function fetchVerseFromGitHub(
 /**
  * Lista todos os livros disponíveis
  */
-export async function listBooks(version: GitHubBibleVersion): Promise<Array<{name: string, abbrev: string, chapters: number}>> {
+export async function listBooks(version: GitHubBibleVersion): Promise<Array<{abbrev: string, chapters: number}>> {
   const bible = await fetchBibleVersion(version);
   
   return bible.map(book => ({
-    name: book.book,
     abbrev: book.abbrev,
     chapters: book.chapters.length,
   }));
@@ -163,7 +158,6 @@ export async function searchVerses(
         
         if (text.toLowerCase().includes(searchTerm)) {
           results.push({
-            book: book.book,
             bookAbbrev: book.abbrev,
             chapter: chapterIndex + 1,
             verse: verseIndex + 1,
