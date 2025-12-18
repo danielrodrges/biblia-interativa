@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Clock, Languages, Trophy, Settings, BookOpen, Calendar } from 'lucide-react';
-import { getPreferences } from '@/lib/preferences';
-import { UserPreferences } from '@/lib/types';
+import { useReadingPrefs } from '@/hooks/useReadingPrefs';
 
 // Simulação de dados de progresso (depois virá do Supabase)
 const mockUserStats = {
@@ -20,18 +19,15 @@ const mockUserStats = {
 
 export default function PerfilPage() {
   const router = useRouter();
-  const [preferences, setPreferences] = useState<UserPreferences | null>(null);
+  const { prefs, isLoaded } = useReadingPrefs();
 
   useEffect(() => {
-    const prefs = getPreferences();
-    if (!prefs.onboardingCompleted) {
-      router.push('/onboarding');
-      return;
+    if (isLoaded && !prefs.dominantLanguage) {
+      router.push('/leitura/setup');
     }
-    setPreferences(prefs);
-  }, [router]);
+  }, [router, isLoaded, prefs]);
 
-  if (!preferences) {
+  if (!isLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -59,7 +55,7 @@ export default function PerfilPage() {
                 Meu Perfil
               </h1>
               <p className="text-gray-600">
-                {preferences.userName || 'Usuário'}
+                Usuário
               </p>
             </div>
             <button
@@ -122,19 +118,19 @@ export default function PerfilPage() {
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 mb-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-lg font-semibold text-gray-800">
-                {preferences.practiceLanguage || 'Inglês'}
+                {prefs.practiceLanguage === 'pt-BR' ? 'Português' : 'Inglês'}
               </span>
               <span className="text-sm font-medium text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
                 Ativo
               </span>
             </div>
             <p className="text-sm text-gray-600">
-              Idioma dominante: {preferences.dominantLanguage || 'Português'}
+              Idioma dominante: {prefs.dominantLanguage === 'pt-BR' ? 'Português' : 'Inglês'}
             </p>
           </div>
 
           <div className="text-sm text-gray-500">
-            <p>Versão da Bíblia: <span className="font-medium text-gray-700">{preferences.bibleVersion || 'NVI'}</span></p>
+            <p>Versão da Bíblia: <span className="font-medium text-gray-700">{prefs.bibleVersion || 'NVI'}</span></p>
           </div>
         </div>
 
