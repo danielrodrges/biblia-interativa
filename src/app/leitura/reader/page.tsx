@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSwipeable } from 'react-swipeable';
 import ReaderHeader from '@/components/custom/reader/ReaderHeader';
 import ReaderContent from '@/components/custom/reader/ReaderContent';
 import SpeechControls from '@/components/custom/reader/SpeechControls';
 import { useReadingPrefs } from '@/hooks/useReadingPrefs';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
+import { useSwipeIndicator } from '@/hooks/useSwipeIndicator';
 import { loadBibleChapter, BibleChapter } from '@/lib/bible-loader';
 import { getNextChapter, getPreviousChapter } from '@/lib/bible-navigation';
-import { X, Type, Loader2 } from 'lucide-react';
+import { X, Type, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function ReaderPage() {
   const router = useRouter();
@@ -18,6 +20,7 @@ export default function ReaderPage() {
     lang: prefs.practiceLanguage === 'pt-BR' ? 'pt-BR' : 'en-US',
     rate: 0.9,
   });
+  const { swipeDirection, showSwipeLeft, showSwipeRight } = useSwipeIndicator();
   
   const [showSettings, setShowSettings] = useState(false);
   const [currentBook, setCurrentBook] = useState('JHN'); // João como padrão
@@ -116,6 +119,25 @@ export default function ReaderPage() {
     }
   };
 
+  // Configurar gestos de swipe
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => {
+      if (canGoNext()) {
+        showSwipeLeft();
+        handleNextChapter();
+      }
+    },
+    onSwipedRight: () => {
+      if (canGoPrevious()) {
+        showSwipeRight();
+        handlePreviousChapter();
+      }
+    },
+    preventScrollOnSwipe: false,
+    trackMouse: false,
+    delta: 50, // Sensibilidade do swipe
+  });
+
   if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -129,7 +151,7 @@ export default function ReaderPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col pb-36">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col pb-36" {...swipeHandlers}>
       <ReaderHeader
         book={chapterData?.bookName || currentBook}
         chapter={currentChapter}
@@ -179,7 +201,7 @@ export default function ReaderPage() {
         </div>
       ) : chapterData ? (
         <>
-          <div className=\"flex-1 overflow-y-auto overflow-x-hidden scrollable-content\">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden scrollable-content">
             <ReaderContent
             verses={chapterData.verses}
             fontSize={prefs.readerFontSize}
@@ -188,6 +210,21 @@ export default function ReaderPage() {
           </div>
         </>
       ) : null}
+
+      {/* Indicador visual de swipe */}
+      {swipeDirection && (
+        <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-50">
+          <div className={`bg-blue-500/20 backdrop-blur-sm rounded-full p-6 animate-in fade-in duration-200 ${
+            swipeDirection === 'left' ? 'slide-in-from-left' : 'slide-in-from-right'
+          }`}>
+            {swipeDirection === 'left' ? (
+              <ChevronLeft className="w-16 h-16 text-blue-600 dark:text-blue-400" />
+            ) : (
+              <ChevronRight className="w-16 h-16 text-blue-600 dark:text-blue-400" />
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Controles de Voz */}
       {chapterData && (
