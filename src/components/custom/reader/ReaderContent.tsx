@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSwipeable } from 'react-swipeable';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Verse } from '@/mocks/bibleChapter';
@@ -16,19 +16,19 @@ const fontSizeClasses = {
   L: 'text-xl leading-loose',
 };
 
-// Estimativa de altura de versículo baseado no tamanho da fonte
-const VERSE_HEIGHT_ESTIMATE = {
-  S: 80,  // ~3-4 linhas
-  M: 95,  // ~4 linhas
-  L: 110, // ~4-5 linhas
+// Versículos por página fixos - mais simples e rápido
+const VERSES_PER_PAGE = {
+  S: 12,
+  M: 10,
+  L: 8,
 };
 
 export default function ReaderContent({ verses, fontSize }: ReaderContentProps) {
   const [currentPage, setCurrentPage] = useState(0);
-  const [versesPerPage, setVersesPerPage] = useState(10);
-  const containerRef = useRef<HTMLDivElement>(null);
+  
+  const versesPerPage = VERSES_PER_PAGE[fontSize];
 
-  // Calcula páginas usando useMemo para evitar recálculo desnecessário
+  // Calcula páginas usando useMemo
   const pages = useMemo(() => {
     const newPages: Verse[][] = [];
     for (let i = 0; i < verses.length; i += versesPerPage) {
@@ -37,86 +37,52 @@ export default function ReaderContent({ verses, fontSize }: ReaderContentProps) 
     return newPages;
   }, [verses, versesPerPage]);
 
-  // Calcula versículos por página baseado na altura da tela
-  useEffect(() => {
-    const calculateVersesPerPage = () => {
-      const availableHeight = window.innerHeight - 304;
-      const verseHeight = VERSE_HEIGHT_ESTIMATE[fontSize];
-      const calculated = Math.floor(availableHeight / verseHeight);
-      const final = Math.max(3, calculated);
-      
-      setVersesPerPage(final);
-    };
-
-    calculateVersesPerPage();
-    
-    // Debounce do resize para evitar múltiplos recálculos
-    let timeoutId: NodeJS.Timeout;
-    const handleResize = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(calculateVersesPerPage, 150);
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [fontSize]);
-
   // Reset para primeira página ao mudar de capítulo
   useEffect(() => {
     setCurrentPage(0);
   }, [verses]);
 
   const totalPages = pages.length;
-  const canGoPrevious = currentPage > 0;
-  const canGoNext = currentPage < totalPages - 1;
 
   const goToPreviousPage = useCallback(() => {
-    if (currentPage > 0) {
-      setCurrentPage(prev => prev - 1);
-    }
-  }, [currentPage]);
+    setCurrentPage(prev => Math.max(0, prev - 1));
+  }, []);
 
   const goToNextPage = useCallback(() => {
-    if (currentPage < totalPages - 1) {
-      setCurrentPage(prev => prev + 1);
-    }
-  }, [currentPage, totalPages]);
+    setCurrentPage(prev => Math.min(totalPages - 1, prev + 1));
+  }, [totalPages]);
 
-  // Configuração do swipe com callbacks memoizados
+  // Configuração do swipe
   const swipeHandlers = useSwipeable({
     onSwipedLeft: goToNextPage,
     onSwipedRight: goToPreviousPage,
-    trackMouse: false, // Desabilita mouse tracking para melhor performance
+    trackMouse: false,
     trackTouch: true,
     delta: 50,
     preventScrollOnSwipe: false,
   });
 
   const currentVerses = pages[currentPage] || [];
+  const canGoPrevious = currentPage > 0;
+  const canGoNext = currentPage < totalPages - 1;
 
   return (
-    <div className="flex-1 flex flex-col relative" ref={containerRef}>
-      {/* Conteúdo com swipe */}
+    <div className="flex-1 flex flex-col relative">{/* Conteúdo com swipe */}
       <div
         {...swipeHandlers}
-        className="flex-1 overflow-hidden"
-        style={{ touchAction: 'pan-y' }} // Permite scroll vertical mas detecta swipe horizontal
+        className="flex-1 overflow-y-auto px-6 py-8"
+        style={{ touchAction: 'pan-y' }}
       >
-        <div className="h-full overflow-y-auto">
-          <div className="max-w-[720px] mx-auto px-6 py-8">
-            <div className={`space-y-4 ${fontSizeClasses[fontSize]} text-gray-800 dark:text-gray-200`}>
-              {currentVerses.map((verse) => (
-                <p key={verse.number} className="text-justify">
-                  <span className="inline-block w-8 text-sm font-semibold text-blue-600 dark:text-blue-400 mr-2">
-                    {verse.number}
-                  </span>
-                  <span>{verse.text}</span>
-                </p>
-              ))}
-            </div>
+        <div className="max-w-[720px] mx-auto">
+          <div className={`space-y-4 ${fontSizeClasses[fontSize]} text-gray-800 dark:text-gray-200`}>
+            {currentVerses.map((verse) => (
+              <p key={verse.number} className="text-justify">
+                <span className="inline-block w-8 text-sm font-semibold text-blue-600 dark:text-blue-400 mr-2">
+                  {verse.number}
+                </span>
+                <span>{verse.text}</span>
+              </p>
+            ))}
           </div>
         </div>
       </div>

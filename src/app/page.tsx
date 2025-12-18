@@ -1,63 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser } from '@/lib/supabase';
-import { BookOpen, Globe, Heart, Sparkles } from 'lucide-react';
 
 export default function HomePage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const currentUser = await getCurrentUser();
-        if (currentUser) {
-          // Usuário autenticado, redirecionar para /inicio
-          router.push('/inicio');
-          return;
-        }
-        setUser(currentUser);
-      } catch (error) {
-        console.error('Erro ao verificar autenticação:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
+    // Sempre redireciona direto para /inicio
+    router.replace('/inicio');
   }, [router]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-50 to-amber-50">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Se chegou aqui, não há usuário autenticado - mostrar landing page
   return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 via-purple-50 to-amber-50">
-        {/* Header */}
-        <header className="bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <BookOpen className="w-8 h-8 text-blue-600" />
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Leitura Espiritual
-                </h1>
-              </div>
-              <button
-                onClick={() => router.push('/auth/login')}
-                className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full hover:shadow-lg transition-all duration-300 hover:scale-105"
-              >
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-50 to-amber-50">
+      <div className="text-center">
+        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-gray-600 text-lg">Carregando...</p>
+      </div>
+    </div>
+  );
+}
                 Entrar
               </button>
             </div>

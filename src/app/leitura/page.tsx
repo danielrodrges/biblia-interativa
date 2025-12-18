@@ -2,22 +2,16 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useReadingPrefs } from '@/hooks/useReadingPrefs';
 
 export default function LeituraPage() {
   const router = useRouter();
-  const { hasValidPrefs } = useReadingPrefs();
 
   useEffect(() => {
-    // Redireciona para setup se as preferências de leitura não estiverem configuradas
-    if (!hasValidPrefs()) {
-      router.replace('/leitura/setup');
-    } else {
-      router.replace('/leitura/reader');
-    }
-  }, [router, hasValidPrefs]);
+    // Sempre redireciona para setup primeiro
+    // O setup decidirá se vai para reader ou configuração
+    router.replace('/leitura/setup');
+  }, [router]);
 
-  // Loading enquanto redireciona
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
       <div className="text-center">
