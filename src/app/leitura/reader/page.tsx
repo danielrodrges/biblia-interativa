@@ -1,17 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import ReaderHeader from '@/components/custom/reader/ReaderHeader';
 import ReaderContent from '@/components/custom/reader/ReaderContent';
+import SpeechControls from '@/components/custom/reader/SpeechControls';
 import { useReadingPrefs } from '@/hooks/useReadingPrefs';
+import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { loadBibleChapter, BibleChapter } from '@/lib/bible-loader';
 import { getNextChapter, getPreviousChapter } from '@/lib/bible-navigation';
-import { X, Type, Languages, Loader2 } from 'lucide-react';
+import { X, Type, Loader2 } from 'lucide-react';
 
 export default function ReaderPage() {
   const router = useRouter();
   const { prefs, savePrefs, hasValidPrefs, isLoaded } = useReadingPrefs();
+  const { state: speechState, currentIndex, speak, pause, resume, stop, isSupported } = useSpeechSynthesis({
+    lang: prefs.practiceLanguage === 'pt-BR' ? 'pt-BR' : 'en-US',
+    rate: 0.9,
+  });
   
   const [showSettings, setShowSettings] = useState(false);
   const [currentBook, setCurrentBook] = useState('JHN'); // João como padrão
@@ -94,6 +100,18 @@ export default function ReaderPage() {
     return getNextChapter(currentBook, currentChapter) !== null;
   };
 
+  // Preparar textos para leitura
+  const verseTexts = useMemo(() => {
+    if (!chapterData) return [];
+    return chapterData.verses.map(v => `Versículo ${v.number}. ${v.text}`);
+  }, [chapterData]);
+
+  const handleStartReading = () => {
+    if (verseTexts.length > 0) {
+      speak(verseTexts, 0);
+    }
+  };
+
   if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -139,9 +157,22 @@ export default function ReaderPage() {
           <ReaderContent
             verses={chapterData.verses}
             fontSize={prefs.readerFontSize}
+            highlightedIndex={speechState === 'speaking' ? currentIndex : -1}
           />
         </>
       ) : null}
+
+      {/* Controles de Voz */}
+      {chapterData && (
+        <SpeechControls
+          state={speechState}
+          onPlay={handleStartReading}
+          onPause={pause}
+          onResume={resume}
+          onStop={stop}
+          isSupported={isSupported}
+        />
+      )}
 
       {/* Navegação de Capítulos */}
       <div className="fixed bottom-20 left-0 right-0 z-40 bg-white/98 dark:bg-gray-900/98 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 shadow-lg">
@@ -209,6 +240,19 @@ export default function ReaderPage() {
                       {size === 'S' ? 'Pequeno' : size === 'M' ? 'Médio' : 'Grande'}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Info sobre Áudio */}
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4">
+                  <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-2">
+                    🎧 Leitura em Voz Alta
+                  </h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    Use os controles de áudio na parte inferior para ouvir o capítulo sendo lido em voz alta. 
+                    O versículo atual será destacado durante a leitura.
+                  </p>
                 </div>
               </div>
 
