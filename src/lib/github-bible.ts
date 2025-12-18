@@ -1,7 +1,7 @@
 // Serviço para importar dados bíblicos do repositório thiagobodruk/biblia
 // GitHub: https://github.com/thiagobodruk/biblia
 
-const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/thiagobodruk/biblia/main/json';
+const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/thiagobodruk/biblia/master/json';
 
 // Mapeamento de versões disponíveis no repositório
 export const GITHUB_BIBLE_VERSIONS = {

@@ -144,16 +144,16 @@ export async function loadBibleChapter(
         chapter
       );
 
-      if (!githubData) return null;
+      if (!githubData || githubData.length === 0) return null;
 
       return {
         book: bookCode,
         bookName: bookInfo.name,
         chapter,
         version,
-        verses: githubData.verses.map((text, index) => ({
-          number: index + 1,
-          text,
+        verses: githubData.map((verse) => ({
+          number: verse.verse,
+          text: verse.text,
         })),
       };
     } else {
