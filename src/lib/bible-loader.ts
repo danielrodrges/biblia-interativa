@@ -10,7 +10,19 @@ import { fetchChapter as fetchChapterFromAPI, fetchVerse as fetchVerseFromAPI } 
 // Criar cliente Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Validar variáveis de ambiente
+if (typeof window !== 'undefined') {
+  console.log('📡 Supabase Config:', {
+    url: supabaseUrl ? '✅ Configurado' : '❌ Faltando',
+    key: supabaseAnonKey ? '✅ Configurado' : '❌ Faltando',
+    urlValue: supabaseUrl,
+  });
+}
+
+const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
 
 export interface BibleVerse {
   number: number;
@@ -149,38 +161,42 @@ export async function loadBibleChapter(
     console.log(`📚 Livro encontrado: ${bookInfo.name}`);
 
     // PRIMEIRA TENTATIVA: Carregar do Supabase (RÁPIDO)
-    try {
-      console.log(`🗄️ [${Date.now()}] Buscando no Supabase...`);
-      
-      const { data, error } = await supabase
-        .from('bible_verses')
-        .select('verse_number, text')
-        .eq('book_id', bookCode)
-        .eq('chapter', chapter)
-        .eq('version_id', version)
-        .order('verse_number', { ascending: true });
+    if (supabase) {
+      try {
+        console.log(`🗄️ [${Date.now()}] Buscando no Supabase...`);
+        
+        const { data, error } = await supabase
+          .from('bible_verses')
+          .select('verse_number, text')
+          .eq('book_id', bookCode)
+          .eq('chapter', chapter)
+          .eq('version_id', version)
+          .order('verse_number', { ascending: true });
 
-      const supabaseTime = Date.now() - startTime;
-      
-      if (!error && data && data.length > 0) {
-        console.log(`✅ [${supabaseTime}ms] Supabase retornou ${data.length} versículos`);
-        return {
-          book: bookCode,
-          bookName: bookInfo.name,
-          chapter,
-          version,
-          verses: data.map((verse: any) => ({
-            number: verse.verse_number,
-            text: verse.text,
-          })),
-        };
-      } else if (error) {
-        console.warn(`⚠️ Erro ao buscar no Supabase:`, error.message);
-      } else {
-        console.warn(`⚠️ Supabase vazio para ${bookCode} ${chapter} ${version}`);
+        const supabaseTime = Date.now() - startTime;
+        
+        if (!error && data && data.length > 0) {
+          console.log(`✅ [${supabaseTime}ms] Supabase retornou ${data.length} versículos`);
+          return {
+            book: bookCode,
+            bookName: bookInfo.name,
+            chapter,
+            version,
+            verses: data.map((verse: any) => ({
+              number: verse.verse_number,
+              text: verse.text,
+            })),
+          };
+        } else if (error) {
+          console.warn(`⚠️ Erro ao buscar no Supabase:`, error.message);
+        } else {
+          console.warn(`⚠️ Supabase vazio para ${bookCode} ${chapter} ${version}`);
+        }
+      } catch (supabaseError: any) {
+        console.warn(`⚠️ Erro ao conectar no Supabase:`, supabaseError.message);
       }
-    } catch (supabaseError: any) {
-      console.warn(`⚠️ Erro ao conectar no Supabase:`, supabaseError.message);
+    } else {
+      console.warn('⚠️ Supabase não configurado, usando fallback...');
     }
 
     // SEGUNDA TENTATIVA: Carregar do GitHub (fallback - LENTO)

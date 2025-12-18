@@ -38,15 +38,17 @@ export default function ReaderPage() {
     if (!isLoaded || !hasValidPrefs()) return;
 
     const loadChapter = async () => {
+      console.log('🔄 Iniciando carregamento...', { currentBook, currentChapter, version: prefs.bibleVersion });
       setIsLoadingChapter(true);
       setLoadError(null);
 
       try {
         // Timeout de 10 segundos
         const timeoutPromise = new Promise<null>((_, reject) => 
-          setTimeout(() => reject(new Error('Tempo limite excedido')), 10000)
+          setTimeout(() => reject(new Error('Tempo limite excedido - verifique sua conexão')), 10000)
         );
 
+        console.log('📖 Chamando loadBibleChapter...');
         const dataPromise = loadBibleChapter(
           currentBook,
           currentChapter,
@@ -56,12 +58,14 @@ export default function ReaderPage() {
         const data = await Promise.race([dataPromise, timeoutPromise]);
 
         if (data) {
+          console.log('✅ Capítulo carregado com sucesso!', data.verses.length, 'versículos');
           setChapterData(data);
         } else {
+          console.error('❌ Nenhum dado retornado');
           setLoadError('Capítulo não encontrado no banco de dados');
         }
       } catch (error: any) {
-        console.error('Erro ao carregar capítulo:', error);
+        console.error('💥 Erro ao carregar capítulo:', error);
         setLoadError(error.message || 'Erro ao carregar capítulo');
       } finally {
         setIsLoadingChapter(false);
