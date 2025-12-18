@@ -122,29 +122,41 @@ export async function loadBibleChapter(
   version: string
 ): Promise<BibleChapter | null> {
   try {
+    console.log(`📖 loadBibleChapter iniciado: ${bookCode} ${chapter} (${version})`);
+    
     const source = VERSION_SOURCES[version as keyof typeof VERSION_SOURCES];
     const bookInfo = BOOK_CODE_MAP[bookCode];
     
     if (!bookInfo) {
-      console.error(`Código de livro desconhecido: ${bookCode}`);
+      console.error(`❌ Código de livro desconhecido: ${bookCode}`);
       return null;
     }
+
+    console.log(`📚 Livro encontrado: ${bookInfo.name} (github: ${bookInfo.github}, api: ${bookInfo.api})`);
+    console.log(`🔍 Fonte de dados: ${source}`);
 
     if (source === 'github') {
       // Carregar do GitHub
       const githubVersion = GITHUB_VERSION_MAP[version];
       if (!githubVersion) {
-        console.error(`Versão GitHub não mapeada: ${version}`);
+        console.error(`❌ Versão GitHub não mapeada: ${version}`);
         return null;
       }
 
+      console.log(`🌐 Buscando do GitHub: versão=${githubVersion}, livro=${bookInfo.github}, cap=${chapter}`);
+      
       const githubData = await fetchChapterFromGitHub(
         githubVersion,
         bookInfo.github,
         chapter
       );
 
-      if (!githubData || githubData.length === 0) return null;
+      if (!githubData || githubData.length === 0) {
+        console.error(`❌ GitHub retornou dados vazios`);
+        return null;
+      }
+
+      console.log(`✅ GitHub retornou ${githubData.length} versículos`);
 
       return {
         book: bookCode,
