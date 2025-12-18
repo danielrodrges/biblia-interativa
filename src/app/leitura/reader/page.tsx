@@ -139,20 +139,41 @@ export default function ReaderPage() {
 
       {isLoadingChapter ? (
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
+          <div className="text-center px-6">
             <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">Carregando capítulo...</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-2">Carregando capítulo...</p>
+            <p className="text-sm text-gray-500 dark:text-gray-500">
+              {currentBook} {currentChapter} - {prefs.bibleVersion}
+            </p>
+            <p className="text-xs text-gray-400 dark:text-gray-600 mt-4">
+              Abra o console (F12) para ver logs detalhados
+            </p>
           </div>
         </div>
       ) : loadError ? (
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-red-600 dark:text-red-400 mb-4">{loadError}</p>
+          <div className="text-center px-6">
+            <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-6 mb-4 max-w-md">
+              <p className="text-red-600 dark:text-red-400 mb-4 font-semibold">❌ {loadError}</p>
+              <div className="text-sm text-red-700 dark:text-red-300 text-left space-y-2">
+                <p><strong>Debugando:</strong></p>
+                <p>• Livro: {currentBook}</p>
+                <p>• Capítulo: {currentChapter}</p>
+                <p>• Versão: {prefs.bibleVersion}</p>
+                <p>• Supabase: {process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅' : '❌'}</p>
+              </div>
+            </div>
             <button
               onClick={() => router.push('/leitura/setup')}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mb-2"
             >
               Configurar novamente
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="ml-2 px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+            >
+              Recarregar
             </button>
           </div>
         </div>
