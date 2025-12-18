@@ -7,7 +7,6 @@ import { createClient } from '@supabase/supabase-js';
 import { fetchChapterFromGitHub, fetchVerseFromGitHub, GitHubBibleVersion } from './github-bible';
 import { fetchChapter as fetchChapterFromAPI, fetchVerse as fetchVerseFromAPI } from './scripture-api';
 import { BibleChapter, BibleVerse } from './types';
-import { BOOK_CODE_MAP } from './bible-books';
 import { bibleCache } from './bible-cache';
 
 // Criar cliente Supabase
@@ -67,7 +66,6 @@ const GITHUB_VERSION_MAP: Record<string, GitHubBibleVersion> = {
 };
 
 // Mapeamento de códigos de livros
-// GitHub usa abreviações em português, Scripture API usa códigos diferentes
 const BOOK_CODE_MAP: Record<string, { github: string; api: string; name: string }> = {
   // Antigo Testamento
   'GEN': { github: 'gn', api: 'GEN', name: 'Gênesis' },
