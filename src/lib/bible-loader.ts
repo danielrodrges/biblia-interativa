@@ -158,19 +158,16 @@ export async function loadBibleChapter(
       };
     } else {
       // Carregar da Scripture API
-      const apiData = await fetchChapterFromAPI(version, bookInfo.api, chapter);
+      const apiVerses = await fetchChapterFromAPI(version, bookInfo.api, chapter);
       
-      if (!apiData) return null;
+      if (!apiVerses || apiVerses.length === 0) return null;
 
       return {
         book: bookCode,
         bookName: bookInfo.name,
         chapter,
         version,
-        verses: apiData.verses.map((verse) => ({
-          number: verse.number,
-          text: verse.text,
-        })),
+        verses: apiVerses,
       };
     }
   } catch (error) {
@@ -215,18 +212,18 @@ export async function loadBibleVerse(
         text,
       };
     } else {
-      const apiVerse = await fetchVerseFromAPI(
+      const verseText = await fetchVerseFromAPI(
         version,
         bookInfo.api,
         chapter,
         verse
       );
 
-      if (!apiVerse) return null;
+      if (!verseText) return null;
 
       return {
-        number: apiVerse.number,
-        text: apiVerse.text,
+        number: verse,
+        text: verseText,
       };
     }
   } catch (error) {
