@@ -12,15 +12,26 @@ export const availableLanguages: Language[] = [
 ];
 
 export const bibleVersions: BibleVersion[] = [
+  // Versões em Português (Brasil) - Top 5
   { id: 'nvi-pt', languageCode: 'pt', name: 'Nova Versão Internacional', abbreviation: 'NVI' },
   { id: 'ara-pt', languageCode: 'pt', name: 'Almeida Revista e Atualizada', abbreviation: 'ARA' },
-  { id: 'acf-pt', languageCode: 'pt', name: 'Almeida Corrigida Fiel', abbreviation: 'ACF' },
+  { id: 'arc-pt', languageCode: 'pt', name: 'Almeida Revista e Corrigida', abbreviation: 'ARC' },
+  { id: 'ntlh-pt', languageCode: 'pt', name: 'Nova Tradução na Linguagem de Hoje', abbreviation: 'NTLH' },
+  { id: 'naa-pt', languageCode: 'pt', name: 'Nova Almeida Atualizada', abbreviation: 'NAA' },
+  
+  // Versões em Inglês
   { id: 'kjv-en', languageCode: 'en', name: 'King James Version', abbreviation: 'KJV' },
   { id: 'niv-en', languageCode: 'en', name: 'New International Version', abbreviation: 'NIV' },
   { id: 'esv-en', languageCode: 'en', name: 'English Standard Version', abbreviation: 'ESV' },
+  
+  // Versões em Espanhol
   { id: 'rvr-es', languageCode: 'es', name: 'Reina-Valera 1960', abbreviation: 'RVR60' },
   { id: 'nvi-es', languageCode: 'es', name: 'Nueva Versión Internacional', abbreviation: 'NVI' },
+  
+  // Versões em Francês
   { id: 'lsg-fr', languageCode: 'fr', name: 'Louis Segond', abbreviation: 'LSG' },
+  
+  // Versões em Alemão
   { id: 'lu-de', languageCode: 'de', name: 'Lutherbibel', abbreviation: 'LU' },
 ];
 

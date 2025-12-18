@@ -7,13 +7,13 @@ import { BibleVersionData } from './types';
  * Organizadas por idioma
  */
 export const availableBibleVersions: BibleVersionData[] = [
-  // ========== PORTUGUÊS ==========
+  // ========== PORTUGUÊS (Top 5 do Brasil) ==========
   {
     version_id: 'NVI',
     version_name: 'Nova Versão Internacional',
     language_code: 'pt-BR',
     language_name: 'Português do Brasil',
-    description: 'Tradução moderna e fiel aos textos originais',
+    description: 'Tradução moderna, equilibrada entre literalidade e clareza',
     year: 2000,
     source_reference: 'Sociedade Bíblica Internacional',
     is_available: true,
@@ -23,19 +23,29 @@ export const availableBibleVersions: BibleVersionData[] = [
     version_name: 'Almeida Revista e Atualizada',
     language_code: 'pt-BR',
     language_name: 'Português do Brasil',
-    description: 'Versão clássica e amplamente utilizada',
+    description: 'Versão clássica e amplamente utilizada em igrejas evangélicas',
     year: 1993,
     source_reference: 'Sociedade Bíblica do Brasil',
     is_available: true,
   },
   {
-    version_id: 'ACF',
-    version_name: 'Almeida Corrigida Fiel',
+    version_id: 'ARC',
+    version_name: 'Almeida Revista e Corrigida',
     language_code: 'pt-BR',
     language_name: 'Português do Brasil',
-    description: 'Tradução tradicional e literal',
+    description: 'Tradução tradicional com linguagem mais formal',
     year: 1995,
-    source_reference: 'Sociedade Bíblica Trinitariana',
+    source_reference: 'Sociedade Bíblica do Brasil',
+    is_available: true,
+  },
+  {
+    version_id: 'NTLH',
+    version_name: 'Nova Tradução na Linguagem de Hoje',
+    language_code: 'pt-BR',
+    language_name: 'Português do Brasil',
+    description: 'Linguagem simples e acessível para todos os públicos',
+    year: 2000,
+    source_reference: 'Sociedade Bíblica do Brasil',
     is_available: true,
   },
   {
@@ -43,7 +53,7 @@ export const availableBibleVersions: BibleVersionData[] = [
     version_name: 'Nova Almeida Atualizada',
     language_code: 'pt-BR',
     language_name: 'Português do Brasil',
-    description: 'Atualização da Almeida com linguagem contemporânea',
+    description: 'Atualização moderna da tradição Almeida com linguagem contemporânea',
     year: 2017,
     source_reference: 'Sociedade Bíblica do Brasil',
     is_available: true,
