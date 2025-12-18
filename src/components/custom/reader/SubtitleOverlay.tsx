@@ -18,7 +18,7 @@ export default function SubtitleOverlay({ text, fontSize, isVisible }: SubtitleO
   }
 
   return (
-    <div className="fixed bottom-44 left-4 right-4 z-40 pointer-events-none">
+    <div className="fixed bottom-56 left-4 right-4 z-40 pointer-events-none">
       <div className="max-w-[720px] mx-auto">
         <div className="bg-black/80 backdrop-blur-sm rounded-2xl px-5 py-4 shadow-2xl">
           <p className={`${fontSizeClasses[fontSize]} text-white text-center leading-relaxed font-medium`}>

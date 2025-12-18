@@ -147,7 +147,7 @@ export default function ReaderPage() {
       <SubtitleOverlay
         text={activeSubtitle}
         fontSize={prefs.subtitleFontSize}
-        isVisible={prefs.subtitleEnabled && state !== 'idle'}
+        isVisible={prefs.subtitleEnabled && state === 'playing'}
       />
 
       <ReaderControls
