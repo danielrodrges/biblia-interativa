@@ -19,7 +19,8 @@ export default function BottomNav() {
       <div className="max-w-lg mx-auto px-2">
         <div className="flex items-center justify-around h-16">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || 
+                            (item.href === '/leitura' && pathname?.startsWith('/leitura/'));
             const Icon = item.icon;
 
             return (

@@ -27,16 +27,21 @@ export function useReadingPrefs() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setPrefs({ ...defaultPrefs, ...JSON.parse(stored) });
+    const loadPrefs = () => {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setPrefs({ ...defaultPrefs, ...parsed });
+        }
+      } catch (error) {
+        console.error('Error loading reading preferences:', error);
+      } finally {
+        setIsLoaded(true);
       }
-    } catch (error) {
-      console.error('Error loading reading preferences:', error);
-    } finally {
-      setIsLoaded(true);
-    }
+    };
+    
+    loadPrefs();
   }, []);
 
   const savePrefs = (updates: Partial<ReadingPreferences>) => {
