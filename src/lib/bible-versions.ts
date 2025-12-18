@@ -5,9 +5,10 @@ import { BibleVersionData } from './types';
 /**
  * Versões bíblicas oficiais disponíveis no aplicativo
  * Organizadas por idioma
+ * Fonte: GitHub (thiagobodruk/biblia) e Scripture API (api.bible)
  */
 export const availableBibleVersions: BibleVersionData[] = [
-  // ========== PORTUGUÊS (Top 5 do Brasil) ==========
+  // ========== PORTUGUÊS (Brasil) ==========
   {
     version_id: 'NVI',
     version_name: 'Nova Versão Internacional',
@@ -19,43 +20,23 @@ export const availableBibleVersions: BibleVersionData[] = [
     is_available: true,
   },
   {
-    version_id: 'ARA',
-    version_name: 'Almeida Revista e Atualizada',
+    version_id: 'ACF',
+    version_name: 'Almeida Corrigida e Fiel',
     language_code: 'pt-BR',
     language_name: 'Português do Brasil',
-    description: 'Versão clássica e amplamente utilizada em igrejas evangélicas',
-    year: 1993,
-    source_reference: 'Sociedade Bíblica do Brasil',
-    is_available: true,
-  },
-  {
-    version_id: 'ARC',
-    version_name: 'Almeida Revista e Corrigida',
-    language_code: 'pt-BR',
-    language_name: 'Português do Brasil',
-    description: 'Tradução tradicional com linguagem mais formal',
+    description: 'Tradução tradicional com linguagem formal',
     year: 1995,
-    source_reference: 'Sociedade Bíblica do Brasil',
+    source_reference: 'Sociedade Bíblica Trinitariana',
     is_available: true,
   },
   {
-    version_id: 'NTLH',
-    version_name: 'Nova Tradução na Linguagem de Hoje',
+    version_id: 'AA',
+    version_name: 'Almeida Revisada Imprensa Bíblica',
     language_code: 'pt-BR',
     language_name: 'Português do Brasil',
-    description: 'Linguagem simples e acessível para todos os públicos',
-    year: 2000,
-    source_reference: 'Sociedade Bíblica do Brasil',
-    is_available: true,
-  },
-  {
-    version_id: 'NAA',
-    version_name: 'Nova Almeida Atualizada',
-    language_code: 'pt-BR',
-    language_name: 'Português do Brasil',
-    description: 'Atualização moderna da tradição Almeida com linguagem contemporânea',
-    year: 2017,
-    source_reference: 'Sociedade Bíblica do Brasil',
+    description: 'Versão clássica da tradição Almeida',
+    year: 1959,
+    source_reference: 'Imprensa Bíblica Brasileira',
     is_available: true,
   },
   {
@@ -69,7 +50,7 @@ export const availableBibleVersions: BibleVersionData[] = [
     is_available: true,
   },
 
-  // ========== INGLÊS ==========
+  // ========== INGLÊS (Scripture API) ==========
   {
     version_id: 'KJV',
     version_name: 'King James Version',
@@ -88,26 +69,6 @@ export const availableBibleVersions: BibleVersionData[] = [
     description: 'Modern and accurate translation',
     year: 1978,
     source_reference: 'Biblica',
-    is_available: true,
-  },
-  {
-    version_id: 'ESV',
-    version_name: 'English Standard Version',
-    language_code: 'en-US',
-    language_name: 'English (United States)',
-    description: 'Literal and readable translation',
-    year: 2001,
-    source_reference: 'Crossway',
-    is_available: true,
-  },
-  {
-    version_id: 'NLT',
-    version_name: 'New Living Translation',
-    language_code: 'en-US',
-    language_name: 'English (United States)',
-    description: 'Dynamic equivalence translation',
-    year: 1996,
-    source_reference: 'Tyndale House',
     is_available: true,
   },
   {

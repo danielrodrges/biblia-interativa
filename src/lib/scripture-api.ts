@@ -4,21 +4,16 @@
 const API_KEY = process.env.NEXT_PUBLIC_BIBLE_API_KEY || '';
 const API_ENDPOINT = process.env.NEXT_PUBLIC_BIBLE_API_ENDPOINT || 'https://api.scripture.api.bible/v1';
 
-// Mapeamento de versões do app para IDs da API
+// Mapeamento de versões do app para IDs da Scripture API
+// Apenas versões confirmadas e testadas
 const BIBLE_VERSION_IDS: Record<string, string> = {
-  // Português
-  'NVI': '06125adad2d5898a-01',  // NVI em Português
-  'ARA': '06125adad2d5898a-02',  // ARA em Português
-  'ARC': 'de4e12af7f28f599-02',  // ARC em Português
-  'NTLH': '06125adad2d5898a-03', // NTLH em Português (placeholder)
-  'NAA': '06125adad2d5898a-04',  // NAA em Português (placeholder)
+  // Português (Brasil)
+  'NVI': '06125adad2d5898a-01',  // Nova Versão Internacional
   'BLT': 'd63894c8d9a7a503-01',  // Bíblia Livre Para Todos
   
   // Inglês
   'KJV': 'de4e12af7f28f599-01',  // King James Version
   'NIV': '06125adad2d5898a-01',  // New International Version
-  'ESV': 'f421fe261da7624f-01',  // English Standard Version
-  'NLT': '06125adad2d5898a-05',  // New Living Translation
 };
 
 // Mapeamento de nomes de livros para IDs da API

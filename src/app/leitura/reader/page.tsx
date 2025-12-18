@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ReaderHeader from '@/components/custom/reader/ReaderHeader';
 import ReaderContent from '@/components/custom/reader/ReaderContent';
@@ -9,10 +9,11 @@ import SubtitleOverlay from '@/components/custom/reader/SubtitleOverlay';
 import { useReadingPrefs } from '@/hooks/useReadingPrefs';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useSubtitleSync } from '@/hooks/useSubtitleSync';
-import { mockChapter } from '@/mocks/bibleChapter';
+import { loadBibleChapter, BibleChapter } from '@/lib/bible-loader';
+import { getNextChapter, getPreviousChapter, getBookByCode } from '@/lib/bible-navigation';
 import { mockSubtitles } from '@/mocks/subtitles';
 import { mockAudioUrl } from '@/mocks/audio';
-import { X, Type, Languages, Volume2 } from 'lucide-react';
+import { X, Type, Languages, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 
 export default function ReaderPage() {
   const router = useRouter();
@@ -21,12 +22,73 @@ export default function ReaderPage() {
   const activeSubtitle = useSubtitleSync(currentTime, mockSubtitles, prefs.subtitleEnabled && state !== 'idle');
   
   const [showSettings, setShowSettings] = useState(false);
+  const [currentBook, setCurrentBook] = useState('JHN'); // João como padrão
+  const [currentChapter, setCurrentChapter] = useState(1);
+  const [chapterData, setChapterData] = useState<BibleChapter | null>(null);
+  const [isLoadingChapter, setIsLoadingChapter] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Verificar se tem preferências válidas
-  if (isLoaded && !hasValidPrefs()) {
-    router.push('/leitura/setup');
-    return null;
-  }
+  useEffect(() => {
+    if (isLoaded && !hasValidPrefs()) {
+      router.push('/leitura/setup');
+    }
+  }, [isLoaded, hasValidPrefs, router]);
+
+  // Carregar capítulo quando preferências ou navegação mudam
+  useEffect(() => {
+    if (!isLoaded || !hasValidPrefs()) return;
+
+    const loadChapter = async () => {
+      setIsLoadingChapter(true);
+      setLoadError(null);
+
+      try {
+        const data = await loadBibleChapter(
+          currentBook,
+          currentChapter,
+          prefs.bibleVersion!
+        );
+
+        if (data) {
+          setChapterData(data);
+        } else {
+          setLoadError('Capítulo não encontrado');
+        }
+      } catch (error) {
+        console.error('Erro ao carregar capítulo:', error);
+        setLoadError('Erro ao carregar capítulo');
+      } finally {
+        setIsLoadingChapter(false);
+      }
+    };
+
+    loadChapter();
+  }, [currentBook, currentChapter, prefs.bibleVersion, isLoaded, hasValidPrefs]);
+
+  const handlePreviousChapter = () => {
+    const prev = getPreviousChapter(currentBook, currentChapter);
+    if (prev) {
+      setCurrentBook(prev.book);
+      setCurrentChapter(prev.chapter);
+    }
+  };
+
+  const handleNextChapter = () => {
+    const next = getNextChapter(currentBook, currentChapter);
+    if (next) {
+      setCurrentBook(next.book);
+      setCurrentChapter(next.chapter);
+    }
+  };
+
+  const canGoPrevious = () => {
+    return getPreviousChapter(currentBook, currentChapter) !== null;
+  };
+
+  const canGoNext = () => {
+    return getNextChapter(currentBook, currentChapter) !== null;
+  };
 
   if (!isLoaded) {
     return (
@@ -36,18 +98,75 @@ export default function ReaderPage() {
     );
   }
 
+  if (!hasValidPrefs()) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col pb-36">
       <ReaderHeader
-        book={mockChapter.book}
-        chapter={mockChapter.chapter}
+        book={chapterData?.bookName || 'Carregando...'}
+        chapter={currentChapter}
         onSettingsClick={() => setShowSettings(true)}
       />
 
-      <ReaderContent
-        verses={mockChapter.verses}
-        fontSize={prefs.readerFontSize}
-      />
+      {isLoadingChapter ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">Carregando capítulo...</p>
+          </div>
+        </div>
+      ) : loadError ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600 dark:text-red-400 mb-4">{loadError}</p>
+            <button
+              onClick={() => router.push('/leitura/setup')}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Configurar novamente
+            </button>
+          </div>
+        </div>
+      ) : chapterData ? (
+        <>
+          <ReaderContent
+            verses={chapterData.verses}
+            fontSize={prefs.readerFontSize}
+          />
+
+          {/* Navegação entre capítulos */}
+          <div className="fixed bottom-20 left-0 right-0 px-6 pb-4 bg-gradient-to-t from-gray-50 dark:from-gray-900 via-gray-50 dark:via-gray-900 to-transparent pointer-events-none">
+            <div className="max-w-4xl mx-auto flex justify-between gap-4 pointer-events-auto">
+              <button
+                onClick={handlePreviousChapter}
+                disabled={!canGoPrevious()}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                  !canGoPrevious()
+                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                    : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-md hover:shadow-lg'
+                }`}
+              >
+                <ChevronLeft className="w-5 h-5" />
+                Anterior
+              </button>
+              <button
+                onClick={handleNextChapter}
+                disabled={!canGoNext()}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                  !canGoNext()
+                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                    : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-md hover:shadow-lg'
+                }`}
+              >
+                Próximo
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </>
+      ) : null}
 
       <SubtitleOverlay
         text={activeSubtitle}
@@ -151,7 +270,7 @@ export default function ReaderPage() {
                   <div className="flex justify-between">
                     <span>Idioma de leitura:</span>
                     <span className="font-medium text-gray-900 dark:text-white">
-                      {prefs.dominantLanguage}
+                      {prefs.dominantLanguage === 'pt-BR' ? 'Português' : 'English'}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -163,7 +282,7 @@ export default function ReaderPage() {
                   <div className="flex justify-between">
                     <span>Idioma de prática:</span>
                     <span className="font-medium text-gray-900 dark:text-white">
-                      {prefs.practiceLanguage}
+                      {prefs.practiceLanguage === 'pt-BR' ? 'Português' : 'English'}
                     </span>
                   </div>
                 </div>

@@ -8,21 +8,18 @@ import { useReadingPrefs } from '@/hooks/useReadingPrefs';
 const LANGUAGES = [
   { code: 'pt-BR', name: 'Português', flag: '🇧🇷' },
   { code: 'en-US', name: 'English', flag: '🇺🇸' },
-  { code: 'es-ES', name: 'Español', flag: '🇪🇸' },
 ];
 
 const BIBLE_VERSIONS = {
   'pt-BR': [
-    { id: 'NVI', name: 'Nova Versão Internacional' },
-    { id: 'ARA', name: 'Almeida Revista e Atualizada' },
+    { id: 'NVI', name: 'Nova Versão Internacional', source: 'GitHub + API' },
+    { id: 'ACF', name: 'Almeida Corrigida e Fiel', source: 'GitHub' },
+    { id: 'AA', name: 'Almeida Revisada Imprensa Bíblica', source: 'GitHub' },
+    { id: 'BLT', name: 'Bíblia Livre Para Todos', source: 'API' },
   ],
   'en-US': [
-    { id: 'NIV', name: 'New International Version' },
-    { id: 'KJV', name: 'King James Version' },
-  ],
-  'es-ES': [
-    { id: 'NVI-ES', name: 'Nueva Versión Internacional' },
-    { id: 'RVR1960', name: 'Reina-Valera 1960' },
+    { id: 'KJV', name: 'King James Version', source: 'API' },
+    { id: 'NIV', name: 'New International Version', source: 'API' },
   ],
 };
 
@@ -130,6 +127,9 @@ export default function SetupPage() {
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
                       {version.name}
+                    </div>
+                    <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                      {version.source}
                     </div>
                   </div>
                   {bibleVersion === version.id && (
