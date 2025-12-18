@@ -12,9 +12,9 @@ const LANGUAGES = [
 
 const BIBLE_VERSIONS = {
   'pt-BR': [
-    { id: 'NVI', name: 'Nova Versão Internacional', source: 'GitHub + API' },
-    { id: 'ACF', name: 'Almeida Corrigida e Fiel', source: 'GitHub' },
-    { id: 'AA', name: 'Almeida Revisada Imprensa Bíblica', source: 'GitHub' },
+    { id: 'NVI', name: 'Nova Versão Internacional', source: 'Supabase' },
+    { id: 'ARA', name: 'Almeida Revisada Atualizada', source: 'Supabase' },
+    { id: 'ACF', name: 'Almeida Corrigida e Fiel', source: 'Supabase' },
     { id: 'BLT', name: 'Bíblia Livre Para Todos', source: 'API' },
   ],
   'en-US': [

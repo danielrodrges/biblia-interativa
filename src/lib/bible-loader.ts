@@ -1,10 +1,16 @@
 /**
  * Serviço unificado para carregar dados da Bíblia
- * Integra GitHub (offline) e Scripture API (online)
+ * Integra Supabase (primário), GitHub (offline) e Scripture API (online)
  */
 
+import { createClient } from '@supabase/supabase-js';
 import { fetchChapterFromGitHub, fetchVerseFromGitHub, GitHubBibleVersion } from './github-bible';
 import { fetchChapter as fetchChapterFromAPI, fetchVerse as fetchVerseFromAPI } from './scripture-api';
+
+// Criar cliente Supabase
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export interface BibleVerse {
   number: number;
@@ -21,22 +27,28 @@ export interface BibleChapter {
 
 // Mapeamento de versões para fonte de dados
 const VERSION_SOURCES = {
-  // GitHub (offline, grátis)
-  'NVI': 'github' as const,
-  'ACF': 'github' as const,
-  'AA': 'github' as const,
+  // Supabase (primário - dados populados)
+  'NVI': 'supabase' as const,
+  'ARA': 'supabase' as const,
+  'ACF': 'supabase' as const,
+  
+  // GitHub (offline, grátis - fallback)
+  // 'NVI': 'github' as const,
+  // 'ACF': 'github' as const,
+  // 'AA': 'github' as const,
   
   // Scripture API (online, requer chave)
   'BLT': 'api' as const,
   'KJV': 'api' as const,
   'NIV': 'api' as const,
+  'RVR60': 'api' as const,
 };
 
-// Mapeamento de IDs de versões do GitHub
+// Mapeamento de IDs de versões do GitHub (fallback)
 const GITHUB_VERSION_MAP: Record<string, GitHubBibleVersion> = {
   'NVI': 'nvi',
   'ACF': 'acf',
-  'AA': 'aa',
+  'ARA': 'aa',  // GitHub usa 'aa' para Almeida Revisada
 };
 
 // Mapeamento de códigos de livros
@@ -115,6 +127,7 @@ const BOOK_CODE_MAP: Record<string, { github: string; api: string; name: string 
 
 /**
  * Carrega um capítulo completo da Bíblia
+ * Prioridade: 1. Supabase, 2. GitHub, 3. Scripture API
  */
 export async function loadBibleChapter(
   bookCode: string,
@@ -124,7 +137,6 @@ export async function loadBibleChapter(
   try {
     console.log(`📖 loadBibleChapter iniciado: ${bookCode} ${chapter} (${version})`);
     
-    const source = VERSION_SOURCES[version as keyof typeof VERSION_SOURCES];
     const bookInfo = BOOK_CODE_MAP[bookCode];
     
     if (!bookInfo) {
@@ -132,8 +144,44 @@ export async function loadBibleChapter(
       return null;
     }
 
-    console.log(`📚 Livro encontrado: ${bookInfo.name} (github: ${bookInfo.github}, api: ${bookInfo.api})`);
-    console.log(`🔍 Fonte de dados: ${source}`);
+    console.log(`📚 Livro encontrado: ${bookInfo.name}`);
+
+    // PRIMEIRA TENTATIVA: Carregar do Supabase
+    try {
+      console.log(`🗄️ Tentando carregar do Supabase...`);
+      const { data, error } = await supabase
+        .from('bible_verses')
+        .select('verse_number, text')
+        .eq('book_id', bookCode)
+        .eq('chapter', chapter)
+        .eq('version_id', version)
+        .order('verse_number', { ascending: true });
+
+      if (!error && data && data.length > 0) {
+        console.log(`✅ Supabase retornou ${data.length} versículos`);
+        return {
+          book: bookCode,
+          bookName: bookInfo.name,
+          chapter,
+          version,
+          verses: data.map((verse: any) => ({
+            number: verse.verse_number,
+            text: verse.text,
+          })),
+        };
+      } else if (error) {
+        console.warn(`⚠️ Erro ao buscar no Supabase:`, error.message);
+      } else {
+        console.warn(`⚠️ Supabase não retornou dados para ${bookCode} ${chapter} ${version}`);
+      }
+    } catch (supabaseError) {
+      console.warn(`⚠️ Erro ao conectar no Supabase:`, supabaseError);
+    }
+
+    // SEGUNDA TENTATIVA: Carregar do GitHub (fallback)
+    const source = VERSION_SOURCES[version as keyof typeof VERSION_SOURCES];
+    
+    console.log(`🔍 Fonte de fallback: ${source}`);
 
     if (source === 'github') {
       // Carregar do GitHub

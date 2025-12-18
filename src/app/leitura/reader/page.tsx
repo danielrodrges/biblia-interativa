@@ -155,6 +155,8 @@ export default function ReaderPage() {
         onPlay={play}
         onPause={pause}
         onStop={stop}
+        onPrevChapter={canGoPrevious() ? handlePreviousChapter : undefined}
+        onNextChapter={canGoNext() ? handleNextChapter : undefined}
       />
 
       {/* Settings Modal */}
