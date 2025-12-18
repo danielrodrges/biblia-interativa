@@ -7,6 +7,9 @@ export interface ReadingPreferences {
   readerFontSize: 'S' | 'M' | 'L';
   subtitleEnabled: boolean;
   subtitleFontSize: 'S' | 'M' | 'L';
+  speechLanguage: 'pt-BR' | 'en-US' | 'es-ES' | 'it-IT' | 'fr-FR';
+  textLanguage: 'pt-BR' | 'en-US' | 'es-ES' | 'it-IT' | 'fr-FR';
+  speechRate: number;
 }
 
 const STORAGE_KEY = 'reading-preferences';
@@ -18,6 +21,9 @@ const defaultPrefs: ReadingPreferences = {
   readerFontSize: 'M',
   subtitleEnabled: true,
   subtitleFontSize: 'M',
+  speechLanguage: 'pt-BR',
+  textLanguage: 'pt-BR',
+  speechRate: 1.0,
 };
 
 export function useReadingPrefs() {

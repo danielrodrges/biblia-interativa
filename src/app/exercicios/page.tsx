@@ -1,126 +1,108 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle2, XCircle, Trophy, Star } from 'lucide-react';
-import { getPlanById } from '@/lib/apostles-data';
-import type { ExerciseQuestion } from '@/lib/types';
-
-// Exercícios de exemplo baseados no plano de leitura
-const exercisesByPlan: { [key: string]: ExerciseQuestion[] } = {
-  'paulo-amor': [
-    {
-      id: 'q1',
-      type: 'multiple-choice',
-      question: 'Segundo Paulo, o que acontece se falarmos as línguas dos homens e dos anjos, mas não tivermos amor?',
-      options: [
-        'Seremos como bronze que soa',
-        'Seremos abençoados',
-        'Seremos sábios',
-        'Seremos profetas'
-      ],
-      correctAnswer: 'Seremos como bronze que soa',
-      explanation: 'Paulo diz que sem amor, somos como bronze que soa ou címbalo que retine - apenas barulho sem significado.'
-    },
-    {
-      id: 'q2',
-      type: 'true-false',
-      question: 'O amor é paciente e bondoso.',
-      options: ['Verdadeiro', 'Falso'],
-      correctAnswer: 'Verdadeiro',
-      explanation: 'Correto! Paulo descreve o amor como paciente e bondoso.'
-    },
-    {
-      id: 'q3',
-      type: 'multiple-choice',
-      question: 'Qual destas características NÃO é do amor verdadeiro?',
-      options: [
-        'É paciente',
-        'Guarda rancor',
-        'É bondoso',
-        'Não se orgulha'
-      ],
-      correctAnswer: 'Guarda rancor',
-      explanation: 'O amor verdadeiro não guarda rancor. Paulo deixa claro que o amor perdoa.'
-    },
-    {
-      id: 'q4',
-      type: 'multiple-choice',
-      question: 'Segundo o texto, o que permanece para sempre?',
-      options: [
-        'Fé, esperança e amor',
-        'Apenas o amor',
-        'Profecias e conhecimento',
-        'Línguas e sabedoria'
-      ],
-      correctAnswer: 'Fé, esperança e amor',
-      explanation: 'Paulo diz que permanecem a fé, a esperança e o amor, mas o maior deles é o amor.'
-    }
-  ],
-  'paulo-fe': [
-    {
-      id: 'q1',
-      type: 'multiple-choice',
-      question: 'Como somos salvos, segundo Paulo em Efésios?',
-      options: [
-        'Pela fé, é dom de Deus',
-        'Pelas nossas obras',
-        'Pela nossa bondade',
-        'Pelo nosso conhecimento'
-      ],
-      correctAnswer: 'Pela fé, é dom de Deus',
-      explanation: 'Paulo ensina claramente que somos salvos pela graça, mediante a fé - e isso não vem de nós, é dom de Deus.'
-    },
-    {
-      id: 'q2',
-      type: 'true-false',
-      question: 'Podemos nos orgulhar da nossa salvação porque fizemos boas obras.',
-      options: ['Verdadeiro', 'Falso'],
-      correctAnswer: 'Falso',
-      explanation: 'Falso! Paulo diz que não é por obras, para que ninguém se orgulhe. A salvação é presente de Deus.'
-    },
-    {
-      id: 'q3',
-      type: 'multiple-choice',
-      question: 'Qual era nossa condição antes de Cristo?',
-      options: [
-        'Mortos em transgressões',
-        'Justos e santos',
-        'Neutros',
-        'Meio salvos'
-      ],
-      correctAnswer: 'Mortos em transgressões',
-      explanation: 'Paulo descreve que estávamos mortos em transgressões e pecados antes de Cristo nos vivificar.'
-    }
-  ]
-};
+import { ArrowLeft, CheckCircle2, XCircle, Trophy, Star, BookOpen, AlertCircle } from 'lucide-react';
+import { generateVocabularyExercises, getReadingStats, type VocabularyExercise } from '@/lib/reading-history';
+import { useReadingPrefs } from '@/hooks/useReadingPrefs';
 
 function ExerciciosContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const planId = searchParams.get('plano');
-
+  const { prefs } = useReadingPrefs();
+  
+  const [exercises, setExercises] = useState<VocabularyExercise[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [answers, setAnswers] = useState<{ [key: string]: boolean }>({});
   const [completed, setCompleted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<ReturnType<typeof getReadingStats> | null>(null);
 
-  const plan = planId ? getPlanById(planId) : null;
-  const exercises = planId ? exercisesByPlan[planId] || [] : [];
+  useEffect(() => {
+    // Carrega exercícios baseados no idioma de prática
+    const practiceLanguage = prefs.practiceLanguage || prefs.textLanguage;
+    
+    if (!practiceLanguage || practiceLanguage === 'pt-BR') {
+      setLoading(false);
+      return;
+    }
+    
+    const validLanguages = ['en-US', 'es-ES', 'it-IT', 'fr-FR'] as const;
+    if (!validLanguages.includes(practiceLanguage as any)) {
+      setLoading(false);
+      return;
+    }
+    
+    const generated = generateVocabularyExercises(
+      practiceLanguage as 'en-US' | 'es-ES' | 'it-IT' | 'fr-FR',
+      10
+    );
+    
+    setExercises(generated);
+    setStats(getReadingStats());
+    setLoading(false);
+  }, [prefs.practiceLanguage, prefs.textLanguage]);
+
   const currentQ = exercises[currentQuestion];
 
-  if (!plan || exercises.length === 0) {
+  if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6">
-        <p className="text-gray-600 mb-4">Exercícios não disponíveis para este plano</p>
-        <Link
-          href="/apostolos"
-          className="text-blue-600 hover:text-blue-700 font-semibold"
-        >
-          Voltar para Apóstolos
-        </Link>
+        <div className="animate-pulse text-gray-600">Carregando exercícios...</div>
+      </div>
+    );
+  }
+
+  if (exercises.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white px-6 py-12">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+            <AlertCircle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Nenhum exercício disponível
+            </h1>
+            <p className="text-gray-600 mb-6">
+              Para gerar exercícios, você precisa ler alguns capítulos da Bíblia primeiro.
+            </p>
+            
+            {stats && stats.totalReadings > 0 && (
+              <div className="bg-blue-50 rounded-xl p-4 mb-6">
+                <p className="text-sm text-gray-700">
+                  <strong>Suas estatísticas:</strong>
+                  <br />
+                  • {stats.totalChapters} capítulos lidos
+                  <br />
+                  • {stats.totalVerses} versículos
+                  <br />
+                  • {stats.totalReadings} sessões de leitura
+                </p>
+                <p className="text-xs text-gray-600 mt-2">
+                  Os exercícios são gerados com base nas palavras que você leu em outro idioma.
+                  Continue lendo com tradução ativa!
+                </p>
+              </div>
+            )}
+            
+            <div className="space-y-3">
+              <Link
+                href="/leitura"
+                className="block w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-shadow"
+              >
+                <BookOpen className="w-5 h-5 inline mr-2" />
+                Começar a Ler
+              </Link>
+              <Link
+                href="/inicio"
+                className="block w-full bg-gray-100 text-gray-700 py-4 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+              >
+                Voltar ao Início
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -160,6 +142,13 @@ function ExerciciosContent() {
   if (completed) {
     const score = calculateScore();
     const stars = score >= 90 ? 3 : score >= 70 ? 2 : score >= 50 ? 1 : 0;
+    const languageNames: { [key: string]: string } = {
+      'en-US': 'Inglês',
+      'es-ES': 'Espanhol',
+      'it-IT': 'Italiano',
+      'fr-FR': 'Francês',
+    };
+    const practiceLang = prefs.practiceLanguage || prefs.textLanguage;
 
     return (
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white pb-20">
@@ -170,7 +159,7 @@ function ExerciciosContent() {
               Exercícios Concluídos!
             </h1>
             <p className="text-gray-600 mb-6">
-              Você completou os exercícios sobre "{plan.title}"
+              Vocabulário de {languageNames[practiceLang as string] || 'outro idioma'}
             </p>
 
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl p-6 mb-6">
@@ -192,11 +181,28 @@ function ExerciciosContent() {
 
             <div className="space-y-3">
               <button
-                onClick={() => router.push('/apostolos')}
+                onClick={() => {
+                  setCompleted(false);
+                  setCurrentQuestion(0);
+                  setAnswers({});
+                  setSelectedAnswer(null);
+                  setShowResult(false);
+                  const generated = generateVocabularyExercises(
+                    practiceLang as 'en-US' | 'es-ES' | 'it-IT' | 'fr-FR',
+                    10
+                  );
+                  setExercises(generated);
+                }}
                 className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-shadow"
               >
-                Escolher Novo Estudo
+                Tentar Novamente
               </button>
+              <Link
+                href="/leitura"
+                className="block w-full bg-blue-100 text-blue-700 py-4 rounded-xl font-semibold hover:bg-blue-200 transition-colors"
+              >
+                Continuar Lendo
+              </Link>
               <Link
                 href="/inicio"
                 className="block w-full bg-gray-100 text-gray-700 py-4 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
@@ -215,14 +221,14 @@ function ExerciciosContent() {
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-6 safe-area-top">
         <Link
-          href="/apostolos"
+          href="/inicio"
           className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-4"
         >
           <ArrowLeft className="w-5 h-5" />
           <span className="text-sm">Voltar</span>
         </Link>
-        <h1 className="text-xl font-bold mb-2">Exercícios</h1>
-        <p className="text-blue-100 text-sm">{plan.title}</p>
+        <h1 className="text-xl font-bold mb-2">Exercícios de Vocabulário</h1>
+        <p className="text-blue-100 text-sm">Baseado nas suas leituras</p>
       </div>
 
       {/* Progresso */}
@@ -242,9 +248,19 @@ function ExerciciosContent() {
       {/* Questão */}
       <div className="px-6 py-4">
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-6">
-            {currentQ.question}
+          <div className="mb-4">
+            <span className="text-xs text-gray-500 uppercase tracking-wide">
+              O que significa em português?
+            </span>
+          </div>
+          
+          <h2 className="text-3xl font-bold text-blue-600 mb-2 text-center">
+            {currentQ.word}
           </h2>
+          
+          <p className="text-sm text-gray-500 text-center mb-6">
+            {currentQ.reference}
+          </p>
 
           <div className="space-y-3">
             {currentQ.options?.map((option) => {
@@ -295,14 +311,22 @@ function ExerciciosContent() {
         </div>
 
         {/* Explicação */}
-        {showResult && currentQ.explanation && (
+        {showResult && (
           <div className={`rounded-xl p-4 mb-6 ${
             selectedAnswer === currentQ.correctAnswer
               ? 'bg-green-50 border border-green-200'
               : 'bg-blue-50 border border-blue-200'
           }`}>
             <p className="text-sm text-gray-700">
-              <strong>Explicação:</strong> {currentQ.explanation}
+              {selectedAnswer === currentQ.correctAnswer ? (
+                <>
+                  <strong className="text-green-700">✓ Correto!</strong> "{currentQ.word}" significa "{currentQ.portugueseWord}" em português.
+                </>
+              ) : (
+                <>
+                  <strong className="text-blue-700">Resposta correta:</strong> "{currentQ.word}" significa "{currentQ.portugueseWord}" em português.
+                </>
+              )}
             </p>
           </div>
         )}

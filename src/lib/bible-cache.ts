@@ -3,7 +3,13 @@
  * Evita requisições duplicadas ao Supabase
  */
 
-import { BibleChapter } from './types';
+interface BibleChapter {
+  book: string;
+  bookName: string;
+  chapter: number;
+  version: string;
+  verses: { number: number; text: string }[];
+}
 
 interface CacheEntry {
   data: BibleChapter;

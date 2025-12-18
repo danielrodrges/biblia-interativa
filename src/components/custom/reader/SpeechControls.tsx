@@ -36,36 +36,36 @@ export default function SpeechControls({
   const isPaused = state === 'paused';
 
   return (
-    <div className="flex-shrink-0 bg-white/98 dark:bg-gray-900/98 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 shadow-lg z-40">
-      <div className="max-w-[720px] mx-auto px-4 py-3">
-        <div className="flex items-center justify-center gap-4">
+    <div className="flex-shrink-0 bg-white/98 dark:bg-gray-900/98 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 shadow-sm z-40">
+      <div className="max-w-[720px] mx-auto px-4 py-2">
+        <div className="flex items-center justify-center gap-3">
           {/* Ícone de Volume */}
-          <Volume2 className="w-5 h-5 text-gray-400" />
+          <Volume2 className="w-4 h-4 text-gray-400" />
 
           {/* Play / Pause / Resume */}
           {state === 'idle' ? (
             <button
               onClick={onPlay}
-              className="p-4 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 shadow-lg transition-all"
+              className="p-3 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 shadow-md transition-all active:scale-95"
               aria-label="Reproduzir"
             >
-              <Play className="w-6 h-6 text-white fill-white" />
+              <Play className="w-5 h-5 text-white fill-white" />
             </button>
           ) : isSpeaking ? (
             <button
               onClick={onPause}
-              className="p-4 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 shadow-lg transition-all"
+              className="p-3 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 shadow-md transition-all active:scale-95"
               aria-label="Pausar"
             >
-              <Pause className="w-6 h-6 text-white fill-white" />
+              <Pause className="w-5 h-5 text-white fill-white" />
             </button>
           ) : (
             <button
               onClick={onResume}
-              className="p-4 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 shadow-lg transition-all"
+              className="p-3 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 shadow-md transition-all active:scale-95"
               aria-label="Continuar"
             >
-              <Play className="w-6 h-6 text-white fill-white" />
+              <Play className="w-5 h-5 text-white fill-white" />
             </button>
           )}
 
@@ -73,7 +73,7 @@ export default function SpeechControls({
           <button
             onClick={onStop}
             disabled={state === 'idle'}
-            className={`p-3 rounded-full transition-colors ${
+            className={`p-2.5 rounded-full transition-colors active:scale-95 ${
               state === 'idle'
                 ? 'bg-gray-200 dark:bg-gray-800 cursor-not-allowed'
                 : 'bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600'

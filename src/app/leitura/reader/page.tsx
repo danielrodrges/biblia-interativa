@@ -6,44 +6,61 @@ import { useSwipeable } from 'react-swipeable';
 import ReaderHeader from '@/components/custom/reader/ReaderHeader';
 import ReaderContent from '@/components/custom/reader/ReaderContent';
 import SpeechControls from '@/components/custom/reader/SpeechControls';
+import { SubtitleDisplay } from '@/components/custom/reader/SubtitleDisplay';
 import { useReadingPrefs } from '@/hooks/useReadingPrefs';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { useSwipeIndicator } from '@/hooks/useSwipeIndicator';
+import { useReadingTime } from '@/hooks/useReadingTime';
 import { loadBibleChapter, BibleChapter } from '@/lib/bible-loader';
 import { getNextChapter, getPreviousChapter } from '@/lib/bible-navigation';
+import { translateBatch } from '@/lib/translate';
+import { saveReadingEntry } from '@/lib/reading-history';
 import { X, Type, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function ReaderPage() {
   const router = useRouter();
   const { prefs, savePrefs, hasValidPrefs, isLoaded } = useReadingPrefs();
-  const { state: speechState, currentIndex, speak, pause, resume, stop, isSupported } = useSpeechSynthesis({
-    lang: prefs.practiceLanguage === 'pt-BR' ? 'pt-BR' : 'en-US',
-    rate: 0.9,
-  });
+  
+  const speechOptions = useMemo(() => ({
+    lang: prefs.speechLanguage || 'pt-BR',
+    rate: prefs.speechRate || 1.0,
+  }), [prefs.speechLanguage, prefs.speechRate]);
+  
+  const { state: speechState, currentIndex, currentCharIndex, speak, pause, resume, stop, isSupported } = useSpeechSynthesis(speechOptions);
   const { swipeDirection, showSwipeLeft, showSwipeRight } = useSwipeIndicator();
+  const { startTracking, stopTracking } = useReadingTime();
   
   const [showSettings, setShowSettings] = useState(false);
-  const [currentBook, setCurrentBook] = useState('JHN'); // João como padrão
+  const [tempFontSize, setTempFontSize] = useState<'S' | 'M' | 'L'>('M');
+  const [tempSpeechLanguage, setTempSpeechLanguage] = useState<'pt-BR' | 'en-US' | 'es-ES' | 'it-IT' | 'fr-FR'>('pt-BR');
+  const [tempTextLanguage, setTempTextLanguage] = useState<'pt-BR' | 'en-US' | 'es-ES' | 'it-IT' | 'fr-FR'>('pt-BR');
+  const [tempSubtitleEnabled, setTempSubtitleEnabled] = useState(true);  const [tempSpeechRate, setTempSpeechRate] = useState(1.0);  const [currentBook, setCurrentBook] = useState('JHN'); // João como padrão
   const [currentChapter, setCurrentChapter] = useState(1);
   const [chapterData, setChapterData] = useState<BibleChapter | null>(null);
+  const [translatedTexts, setTranslatedTexts] = useState<{en: string[], es: string[], it: string[], fr: string[]}>({en: [], es: [], it: [], fr: []});
+  const [isTranslating, setIsTranslating] = useState(false);
   const [isLoadingChapter, setIsLoadingChapter] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // Verificar se tem preferências válidas
+  const hasValidPreferences = useMemo(() => hasValidPrefs(), [hasValidPrefs]);
+  
   useEffect(() => {
-    if (isLoaded && !hasValidPrefs()) {
+    if (isLoaded && !hasValidPreferences) {
       router.push('/leitura/setup');
     }
-  }, [isLoaded, hasValidPrefs, router]);
+  }, [isLoaded, hasValidPreferences, router]);
 
   // Carregar capítulo quando preferências ou navegação mudam
   useEffect(() => {
-    if (!isLoaded || !hasValidPrefs()) return;
+    if (!isLoaded || !hasValidPreferences) return;
 
     const loadChapter = async () => {
       console.log('🔄 Iniciando carregamento...', { currentBook, currentChapter, version: prefs.bibleVersion });
       setIsLoadingChapter(true);
       setLoadError(null);
+      // Limpar traduções ao mudar de capítulo
+      setTranslatedTexts({en: [], es: [], it: [], fr: []});
 
       try {
         // Timeout de 30 segundos (Supabase está lento devido a falta de índices)
@@ -76,10 +93,188 @@ export default function ReaderPage() {
     };
 
     loadChapter();
-  }, [currentBook, currentChapter, prefs.bibleVersion, isLoaded, hasValidPrefs]);
+  }, [currentBook, currentChapter, prefs.bibleVersion, isLoaded, hasValidPreferences]);
+
+  // Rastrear tempo de leitura
+  useEffect(() => {
+    if (!isLoaded || !hasValidPreferences || !chapterData) return;
+
+    // Iniciar rastreamento quando entrar na página de leitura
+    startTracking();
+
+    // Parar rastreamento ao sair
+    return () => {
+      stopTracking();
+    };
+  }, [isLoaded, hasValidPreferences, chapterData]);
+
+  // Pré-carregar traduções em background para acelerar mudanças de idioma
+  useEffect(() => {
+    if (!isLoaded || !hasValidPreferences || !chapterData) return;
+    if (translatedTexts.en.length > 0) return; // Já tem traduções
+
+    // Pré-carregar inglês em background (idioma mais comum)
+    const preloadTranslations = async () => {
+      const portugueseTexts = chapterData.verses.map(v => v.text);
+      
+      // Traduzir silenciosamente em background sem mostrar loading
+      setTimeout(async () => {
+        try {
+          const [enTexts, esTexts] = await Promise.all([
+            translateBatch(portugueseTexts, 'en'),
+            translateBatch(portugueseTexts, 'es')
+          ]);
+          
+          // Atualizar cache silenciosamente se ainda não tem
+          setTranslatedTexts(prev => ({
+            en: prev.en.length > 0 ? prev.en : enTexts,
+            es: prev.es.length > 0 ? prev.es : esTexts,
+            it: prev.it,
+            fr: prev.fr
+          }));
+          console.log('⚡ Pré-carregamento de traduções concluído');
+        } catch (error) {
+          console.log('ℹ️ Pré-carregamento falhou (normal se offline)');
+        }
+      }, 2000); // Esperar 2s após carregar o capítulo
+    };
+
+    preloadTranslations();
+  }, [chapterData, isLoaded, hasValidPreferences]);
+
+  // Traduzir para inglês ou espanhol quando idioma do texto ou voz necessitar
+  useEffect(() => {
+    if (!isLoaded || !hasValidPreferences || !chapterData) return;
+
+    const translateChapter = async () => {
+      const needsEnglish = prefs.textLanguage === 'en-US' || prefs.speechLanguage === 'en-US';
+      const needsSpanish = prefs.textLanguage === 'es-ES' || prefs.speechLanguage === 'es-ES';
+      const needsItalian = prefs.textLanguage === 'it-IT' || prefs.speechLanguage === 'it-IT';
+      const needsFrench = prefs.textLanguage === 'fr-FR' || prefs.speechLanguage === 'fr-FR';
+      
+      if (!needsEnglish && !needsSpanish && !needsItalian && !needsFrench) {
+        console.log('📖 Idioma do texto e voz são português, limpando traduções');
+        setTranslatedTexts({en: [], es: [], it: [], fr: []});
+        return;
+      }
+
+      const portugueseTexts = chapterData.verses.map(v => v.text);
+      
+      // Verificar se já temos traduções para este capítulo
+      const hasEnglish = translatedTexts.en.length === portugueseTexts.length;
+      const hasSpanish = translatedTexts.es.length === portugueseTexts.length;
+      const hasItalian = translatedTexts.it.length === portugueseTexts.length;
+      const hasFrench = translatedTexts.fr.length === portugueseTexts.length;
+      
+      // Se não precisa traduzir nada, retornar
+      if ((!needsEnglish || hasEnglish) && (!needsSpanish || hasSpanish) && (!needsItalian || hasItalian) && (!needsFrench || hasFrench)) {
+        return;
+      }
+
+      setIsTranslating(true);
+      const newTranslations = {en: translatedTexts.en, es: translatedTexts.es, it: translatedTexts.it, fr: translatedTexts.fr};
+
+      try {
+        // Traduzir todos os idiomas necessários em paralelo para máxima velocidade
+        const promises: Promise<void>[] = [];
+        
+        // Traduzir para inglês se necessário e não tiver
+        if (needsEnglish && !hasEnglish) {
+          promises.push(
+            translateBatch(portugueseTexts, 'en').then(texts => {
+              newTranslations.en = texts;
+              console.log('✅ Inglês concluído');
+            })
+          );
+        }
+
+        // Traduzir para espanhol se necessário e não tiver
+        if (needsSpanish && !hasSpanish) {
+          promises.push(
+            translateBatch(portugueseTexts, 'es').then(texts => {
+              newTranslations.es = texts;
+              console.log('✅ Espanhol concluído');
+            })
+          );
+        }
+
+        // Traduzir para italiano se necessário e não tiver
+        if (needsItalian && !hasItalian) {
+          promises.push(
+            translateBatch(portugueseTexts, 'it').then(texts => {
+              newTranslations.it = texts;
+              console.log('✅ Italiano concluído');
+            })
+          );
+        }
+
+        // Traduzir para francês se necessário e não tiver
+        if (needsFrench && !hasFrench) {
+          promises.push(
+            translateBatch(portugueseTexts, 'fr').then(texts => {
+              newTranslations.fr = texts;
+              console.log('✅ Francês concluído');
+            })
+          );
+        }
+
+        // Aguardar todas as traduções em paralelo
+        await Promise.all(promises);
+
+        setTranslatedTexts(newTranslations);
+        
+        // Salvar histórico de leitura quando houver traduções
+        if (chapterData && Object.values(newTranslations).some(arr => arr.length > 0)) {
+          const bookName = chapterData.book.name;
+          const verseNumbers = chapterData.verses.map(v => v.verse);
+          
+          // Extrair palavras-chave dos textos em português
+          const extractKeywords = (text: string): string[] => {
+            const stopWords = new Set([
+              'o', 'a', 'os', 'as', 'um', 'uma', 'uns', 'umas',
+              'de', 'da', 'do', 'das', 'dos', 'em', 'na', 'no', 'nas', 'nos',
+              'para', 'por', 'com', 'sem', 'e', 'ou', 'que'
+            ]);
+            return text
+              .toLowerCase()
+              .replace(/[.,!?;:()]/g, '')
+              .split(/\s+/)
+              .filter(word => word.length > 3 && !stopWords.has(word));
+          };
+          
+          const allPortugueseWords = portugueseTexts.flatMap(extractKeywords);
+          
+          saveReadingEntry({
+            book: bookName,
+            chapter: currentChapter,
+            verses: verseNumbers,
+            timestamp: Date.now(),
+            portugueseWords: allPortugueseWords,
+            translatedWords: {
+              en: newTranslations.en.flatMap(extractKeywords),
+              es: newTranslations.es.flatMap(extractKeywords),
+              it: newTranslations.it.flatMap(extractKeywords),
+              fr: newTranslations.fr.flatMap(extractKeywords),
+            },
+          });
+          
+          console.log('📚 Histórico de leitura salvo');
+        }
+      } catch (err: any) {
+        console.error('❌ Erro na tradução:', err.message || err);
+      } finally {
+        setIsTranslating(false);
+      }
+    };
+
+    translateChapter();
+  }, [prefs.textLanguage, prefs.speechLanguage, chapterData, isLoaded, hasValidPreferences]);
 
   const handlePreviousChapter = () => {
+    console.log('🔙 handlePreviousChapter chamado');
+    console.log('Atual:', { book: currentBook, chapter: currentChapter });
     const prev = getPreviousChapter(currentBook, currentChapter);
+    console.log('Anterior encontrado:', prev);
     if (prev) {
       setCurrentBook(prev.book);
       setCurrentChapter(prev.chapter);
@@ -87,7 +282,10 @@ export default function ReaderPage() {
   };
 
   const handleNextChapter = () => {
+    console.log('▶️ handleNextChapter chamado');
+    console.log('Atual:', { book: currentBook, chapter: currentChapter });
     const next = getNextChapter(currentBook, currentChapter);
+    console.log('Próximo encontrado:', next);
     if (next) {
       setCurrentBook(next.book);
       setCurrentChapter(next.chapter);
@@ -97,6 +295,46 @@ export default function ReaderPage() {
   const handleNavigateToChapter = (bookCode: string, chapter: number) => {
     setCurrentBook(bookCode);
     setCurrentChapter(chapter);
+  };
+
+  const handleOpenSettings = () => {
+    setTempFontSize(prefs.readerFontSize);
+    setTempSpeechLanguage(prefs.speechLanguage);
+    setTempTextLanguage(prefs.textLanguage || 'pt-BR');
+    setTempSubtitleEnabled(prefs.subtitleEnabled);
+    setTempSpeechRate(prefs.speechRate || 1.0);
+    setShowSettings(true);
+  };
+
+  const handleSaveSettings = () => {
+    const wasPlaying = speechState === 'speaking';
+    const savedIndex = currentIndex;
+    
+    // Se estiver tocando e a velocidade mudou, parar para aplicar nova velocidade
+    if (wasPlaying && tempSpeechRate !== prefs.speechRate) {
+      stop();
+    }
+    
+    savePrefs({
+      readerFontSize: tempFontSize,
+      speechLanguage: tempSpeechLanguage,
+      textLanguage: tempTextLanguage,
+      subtitleEnabled: tempSubtitleEnabled,
+      speechRate: tempSpeechRate,
+    });
+    
+    setShowSettings(false);
+    
+    // Reiniciar reprodução do mesmo ponto com nova velocidade
+    if (wasPlaying && tempSpeechRate !== prefs.speechRate) {
+      setTimeout(() => {
+        handleStartReading(savedIndex);
+      }, 100);
+    }
+  };
+
+  const handleCancelSettings = () => {
+    setShowSettings(false);
   };
 
   const canGoPrevious = () => {
@@ -110,11 +348,74 @@ export default function ReaderPage() {
   // Preparar textos para leitura
   const verseTexts = useMemo(() => {
     if (!chapterData) return [];
-    return chapterData.verses.map(v => `Versículo ${v.number}. ${v.text}`);
-  }, [chapterData]);
+    
+    // Se idioma da voz é inglês e temos textos traduzidos, usar traduzidos
+    if (prefs.speechLanguage === 'en-US' && translatedTexts.en.length > 0) {
+      return translatedTexts.en;
+    }
+    
+    // Se idioma da voz é espanhol e temos textos traduzidos, usar traduzidos
+    if (prefs.speechLanguage === 'es-ES' && translatedTexts.es.length > 0) {
+      return translatedTexts.es;
+    }
+    
+    // Se idioma da voz é italiano e temos textos traduzidos, usar traduzidos
+    if (prefs.speechLanguage === 'it-IT' && translatedTexts.it.length > 0) {
+      return translatedTexts.it;
+    }
+    
+    // Se idioma da voz é francês e temos textos traduzidos, usar traduzidos
+    if (prefs.speechLanguage === 'fr-FR' && translatedTexts.fr.length > 0) {
+      return translatedTexts.fr;
+    }
+    
+    // Senão, usar a versão em português
+    return chapterData.verses.map(v => v.text);
+  }, [chapterData, translatedTexts, prefs.speechLanguage]);
+
+  // Preparar versos para exibição (com texto correto para sincronização)
+  const displayVerses = useMemo(() => {
+    if (!chapterData) return [];
+    
+    // Se o idioma do TEXTO for inglês e temos traduções, usar texto traduzido
+    if (prefs.textLanguage === 'en-US' && translatedTexts.en.length > 0) {
+      return chapterData.verses.map((v, i) => ({
+        number: v.number,
+        text: translatedTexts.en[i] || v.text
+      }));
+    }
+    
+    // Se o idioma do TEXTO for espanhol e temos traduções, usar texto traduzido
+    if (prefs.textLanguage === 'es-ES' && translatedTexts.es.length > 0) {
+      return chapterData.verses.map((v, i) => ({
+        number: v.number,
+        text: translatedTexts.es[i] || v.text
+      }));
+    }
+    
+    // Se o idioma do TEXTO for italiano e temos traduções, usar texto traduzido
+    if (prefs.textLanguage === 'it-IT' && translatedTexts.it.length > 0) {
+      return chapterData.verses.map((v, i) => ({
+        number: v.number,
+        text: translatedTexts.it[i] || v.text
+      }));
+    }
+    
+    // Se o idioma do TEXTO for francês e temos traduções, usar texto traduzido
+    if (prefs.textLanguage === 'fr-FR' && translatedTexts.fr.length > 0) {
+      return chapterData.verses.map((v, i) => ({
+        number: v.number,
+        text: translatedTexts.fr[i] || v.text
+      }));
+    }
+    
+    // Senão, usar texto original em português
+    return chapterData.verses;
+  }, [chapterData, translatedTexts, prefs.textLanguage]);
 
   const handleStartReading = () => {
     if (verseTexts.length > 0) {
+      console.log('📖 Iniciando leitura com textos:', verseTexts.slice(0, 3)); // Mostra os 3 primeiros
       speak(verseTexts, 0);
     }
   };
@@ -146,30 +447,34 @@ export default function ReaderPage() {
     );
   }
 
-  if (!hasValidPrefs()) {
+  if (!hasValidPreferences) {
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col pb-36" {...swipeHandlers}>
+    <div className="h-[100dvh] bg-[#FAF9F6] dark:bg-gray-950 flex flex-col" {...swipeHandlers}>
       <ReaderHeader
         book={chapterData?.bookName || currentBook}
         chapter={currentChapter}
-        onSettingsClick={() => setShowSettings(true)}
+        onSettingsClick={handleOpenSettings}
         onNavigate={handleNavigateToChapter}
       />
 
-      {isLoadingChapter ? (
+      {isLoadingChapter || isTranslating ? (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center px-6">
             <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400 mb-2">Carregando capítulo...</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-2">
+              {isTranslating ? 'Traduzindo para inglês...' : 'Carregando capítulo...'}
+            </p>
             <p className="text-sm text-gray-500 dark:text-gray-500">
               {currentBook} {currentChapter} - {prefs.bibleVersion}
             </p>
-            <p className="text-xs text-gray-400 dark:text-gray-600 mt-4">
-              Abra o console (F12) para ver logs detalhados
-            </p>
+            {isTranslating && (
+              <p className="text-xs text-blue-500 dark:text-blue-400 mt-2">
+                🌐 Isso pode levar alguns segundos
+              </p>
+            )}
           </div>
         </div>
       ) : loadError ? (
@@ -203,9 +508,10 @@ export default function ReaderPage() {
         <>
           <div className="flex-1 overflow-y-auto overflow-x-hidden scrollable-content">
             <ReaderContent
-            verses={chapterData.verses}
+            verses={displayVerses}
             fontSize={prefs.readerFontSize}
             highlightedIndex={speechState === 'speaking' ? currentIndex : -1}
+            currentCharIndex={speechState === 'speaking' ? currentCharIndex : 0}
           />
           </div>
         </>
@@ -228,25 +534,35 @@ export default function ReaderPage() {
 
       {/* Controles de Voz */}
       {chapterData && (
-        <SpeechControls
-          state={speechState}
-          onPlay={handleStartReading}
-          onPause={pause}
-          onResume={resume}
-          onStop={stop}
-          isSupported={isSupported}
+        <div className="flex-shrink-0">
+          <SpeechControls
+            state={speechState}
+            onPlay={handleStartReading}
+            onPause={pause}
+            onResume={resume}
+            onStop={stop}
+            isSupported={isSupported}
+          />
+        </div>
+      )}
+
+      {/* Legendas em Tempo Real */}
+      {chapterData && prefs.subtitleEnabled && speechState === 'speaking' && currentIndex >= 0 && (
+        <SubtitleDisplay
+          text={verseTexts[currentIndex]}
+          fontSize={prefs.subtitleFontSize || 'M'}
         />
       )}
 
-      {/* Navegação de Capítulos */}
-      <div className="flex-shrink-0 bg-white/98 dark:bg-gray-900/98 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 shadow-lg safe-area-bottom z-40">
-        <div className="max-w-[720px] mx-auto px-4 py-3 flex items-center justify-center gap-4">
+      {/* Navegação de Capítulos - acima da barra inferior */}
+      <div className="flex-shrink-0 bg-[#FAF9F6] dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-sm mb-14">
+        <div className="max-w-[720px] mx-auto px-4 py-2 flex items-center justify-center gap-3">
           <button
             onClick={handlePreviousChapter}
             disabled={!canGoPrevious()}
-            className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+            className={`flex-1 max-w-[140px] px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
               canGoPrevious()
-                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg'
+                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg active:scale-95'
                 : 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
             }`}
           >
@@ -255,9 +571,9 @@ export default function ReaderPage() {
           <button
             onClick={handleNextChapter}
             disabled={!canGoNext()}
-            className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+            className={`flex-1 max-w-[140px] px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
               canGoNext()
-                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg'
+                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg active:scale-95'
                 : 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
             }`}
           >
@@ -269,9 +585,9 @@ export default function ReaderPage() {
       {/* Settings Modal */}
       {showSettings && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center">
-          <div className="bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md max-h-[85vh] overflow-y-auto">
+          <div className="bg-[#FAF9F6] dark:bg-gray-800 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md max-h-[85vh] overflow-y-auto">
             {/* Header */}
-            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+            <div className="sticky top-0 bg-[#FAF9F6] dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Configurações</h2>
               <button
                 onClick={() => setShowSettings(false)}
@@ -294,9 +610,9 @@ export default function ReaderPage() {
                   {(['S', 'M', 'L'] as const).map((size) => (
                     <button
                       key={size}
-                      onClick={() => savePrefs({ readerFontSize: size })}
+                      onClick={() => setTempFontSize(size)}
                       className={`flex-1 py-3 px-4 rounded-xl border-2 font-semibold transition-all ${
-                        prefs.readerFontSize === size
+                        tempFontSize === size
                           ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
                           : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                       }`}
@@ -305,6 +621,202 @@ export default function ReaderPage() {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Idioma da Voz */}
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xl">🗣️</span>
+                  <label className="font-semibold text-gray-900 dark:text-white">
+                    Idioma da voz
+                  </label>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setTempSpeechLanguage('pt-BR')}
+                    className={`flex-1 py-3 px-2 rounded-xl border-2 font-semibold transition-all flex flex-col items-center gap-1 ${
+                      tempSpeechLanguage === 'pt-BR'
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                        : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <span className="text-2xl">🇧🇷</span>
+                    <span className="text-xs font-bold">PT</span>
+                  </button>
+                  <button
+                    onClick={() => setTempSpeechLanguage('en-US')}
+                    className={`flex-1 py-3 px-2 rounded-xl border-2 font-semibold transition-all flex flex-col items-center gap-1 ${
+                      tempSpeechLanguage === 'en-US'
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                        : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <span className="text-2xl">🇺🇸</span>
+                    <span className="text-xs font-bold">EN</span>
+                  </button>
+                  <button
+                    onClick={() => setTempSpeechLanguage('es-ES')}
+                    className={`flex-1 py-3 px-2 rounded-xl border-2 font-semibold transition-all flex flex-col items-center gap-1 ${
+                      tempSpeechLanguage === 'es-ES'
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                        : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <span className="text-2xl">🇪🇸</span>
+                    <span className="text-xs font-bold">ES</span>
+                  </button>
+                  <button
+                    onClick={() => setTempSpeechLanguage('it-IT')}
+                    className={`flex-1 py-3 px-2 rounded-xl border-2 font-semibold transition-all flex flex-col items-center gap-1 ${
+                      tempSpeechLanguage === 'it-IT'
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                        : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <span className="text-2xl">🇮🇹</span>
+                    <span className="text-xs font-bold">IT</span>
+                  </button>
+                  <button
+                    onClick={() => setTempSpeechLanguage('fr-FR')}
+                    className={`flex-1 py-3 px-2 rounded-xl border-2 font-semibold transition-all flex flex-col items-center gap-1 ${
+                      tempSpeechLanguage === 'fr-FR'
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                        : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <span className="text-2xl">🇫🇷</span>
+                    <span className="text-xs font-bold">FR</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Idioma do Texto */}
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">📖</span>
+                    <label className="font-semibold text-gray-900 dark:text-white">
+                      Idioma do texto exibido
+                    </label>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setTempTextLanguage('pt-BR')}
+                    className={`flex-1 py-3 px-2 rounded-xl border-2 font-semibold transition-all flex flex-col items-center gap-1 ${
+                      tempTextLanguage === 'pt-BR'
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                        : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <span className="text-2xl">🇧🇷</span>
+                    <span className="text-xs font-bold">PT</span>
+                  </button>
+                  <button
+                    onClick={() => setTempTextLanguage('en-US')}
+                    className={`flex-1 py-3 px-2 rounded-xl border-2 font-semibold transition-all flex flex-col items-center gap-1 ${
+                      tempTextLanguage === 'en-US'
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                        : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <span className="text-2xl">🇺🇸</span>
+                    <span className="text-xs font-bold">EN</span>
+                  </button>
+                  <button
+                    onClick={() => setTempTextLanguage('es-ES')}
+                    className={`flex-1 py-3 px-2 rounded-xl border-2 font-semibold transition-all flex flex-col items-center gap-1 ${
+                      tempTextLanguage === 'es-ES'
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                        : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <span className="text-2xl">🇪🇸</span>
+                    <span className="text-xs font-bold">ES</span>
+                  </button>
+                  <button
+                    onClick={() => setTempTextLanguage('it-IT')}
+                    className={`flex-1 py-3 px-2 rounded-xl border-2 font-semibold transition-all flex flex-col items-center gap-1 ${
+                      tempTextLanguage === 'it-IT'
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                        : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <span className="text-2xl">🇮🇹</span>
+                    <span className="text-xs font-bold">IT</span>
+                  </button>
+                  <button
+                    onClick={() => setTempTextLanguage('fr-FR')}
+                    className={`flex-1 py-3 px-2 rounded-xl border-2 font-semibold transition-all flex flex-col items-center gap-1 ${
+                      tempTextLanguage === 'fr-FR'
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                        : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <span className="text-2xl">🇫🇷</span>
+                    <span className="text-xs font-bold">FR</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Velocidade da Leitura */}
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">⚡</span>
+                    <label className="font-semibold text-gray-900 dark:text-white">
+                      Velocidade da leitura
+                    </label>
+                  </div>
+                  <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                    {tempSpeechRate.toFixed(1)}x
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  <input
+                    type="range"
+                    min="0.6"
+                    max="1.4"
+                    step="0.1"
+                    value={tempSpeechRate}
+                    onChange={(e) => setTempSpeechRate(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <span>0.6x (Lento)</span>
+                    <span>1.0x (Normal)</span>
+                    <span>1.4x (Rápido)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Legendas em Tempo Real */}
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">💬</span>
+                    <label className="font-semibold text-gray-900 dark:text-white">
+                      Legendas em tempo real
+                    </label>
+                  </div>
+                  <button
+                    onClick={() => setTempSubtitleEnabled(!tempSubtitleEnabled)}
+                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+                      tempSubtitleEnabled
+                        ? 'bg-blue-500'
+                        : 'bg-gray-300 dark:bg-gray-600'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                        tempSubtitleEnabled ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Exibe o texto do versículo atual durante a leitura em voz alta
+                </p>
               </div>
 
               {/* Info sobre Áudio */}
@@ -351,6 +863,22 @@ export default function ReaderPage() {
               >
                 Alterar idiomas
               </button>
+
+              {/* Botões de ação */}
+              <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  onClick={handleCancelSettings}
+                  className="flex-1 py-3 px-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSaveSettings}
+                  className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-lg transition-all active:scale-95"
+                >
+                  Salvar
+                </button>
+              </div>
             </div>
           </div>
         </div>
