@@ -134,8 +134,10 @@ export async function loadBibleChapter(
   chapter: number,
   version: string
 ): Promise<BibleChapter | null> {
+  const startTime = Date.now();
+  
   try {
-    console.log(`📖 loadBibleChapter iniciado: ${bookCode} ${chapter} (${version})`);
+    console.log(`📖 [${Date.now()}] Iniciando loadBibleChapter: ${bookCode} ${chapter} (${version})`);
     
     const bookInfo = BOOK_CODE_MAP[bookCode];
     
@@ -146,9 +148,10 @@ export async function loadBibleChapter(
 
     console.log(`📚 Livro encontrado: ${bookInfo.name}`);
 
-    // PRIMEIRA TENTATIVA: Carregar do Supabase
+    // PRIMEIRA TENTATIVA: Carregar do Supabase (RÁPIDO)
     try {
-      console.log(`🗄️ Tentando carregar do Supabase...`);
+      console.log(`🗄️ [${Date.now()}] Buscando no Supabase...`);
+      
       const { data, error } = await supabase
         .from('bible_verses')
         .select('verse_number, text')
@@ -157,8 +160,10 @@ export async function loadBibleChapter(
         .eq('version_id', version)
         .order('verse_number', { ascending: true });
 
+      const supabaseTime = Date.now() - startTime;
+      
       if (!error && data && data.length > 0) {
-        console.log(`✅ Supabase retornou ${data.length} versículos`);
+        console.log(`✅ [${supabaseTime}ms] Supabase retornou ${data.length} versículos`);
         return {
           book: bookCode,
           bookName: bookInfo.name,
@@ -172,26 +177,24 @@ export async function loadBibleChapter(
       } else if (error) {
         console.warn(`⚠️ Erro ao buscar no Supabase:`, error.message);
       } else {
-        console.warn(`⚠️ Supabase não retornou dados para ${bookCode} ${chapter} ${version}`);
+        console.warn(`⚠️ Supabase vazio para ${bookCode} ${chapter} ${version}`);
       }
-    } catch (supabaseError) {
-      console.warn(`⚠️ Erro ao conectar no Supabase:`, supabaseError);
+    } catch (supabaseError: any) {
+      console.warn(`⚠️ Erro ao conectar no Supabase:`, supabaseError.message);
     }
 
-    // SEGUNDA TENTATIVA: Carregar do GitHub (fallback)
+    // SEGUNDA TENTATIVA: Carregar do GitHub (fallback - LENTO)
+    console.log(`🔍 Tentando fallback...`);
     const source = VERSION_SOURCES[version as keyof typeof VERSION_SOURCES];
     
-    console.log(`🔍 Fonte de fallback: ${source}`);
-
-    if (source === 'github') {
-      // Carregar do GitHub
+    if (source === 'github' || source === 'supabase') {
       const githubVersion = GITHUB_VERSION_MAP[version];
       if (!githubVersion) {
         console.error(`❌ Versão GitHub não mapeada: ${version}`);
         return null;
       }
 
-      console.log(`🌐 Buscando do GitHub: versão=${githubVersion}, livro=${bookInfo.github}, cap=${chapter}`);
+      console.log(`🌐 Buscando do GitHub (fallback)...`);
       
       const githubData = await fetchChapterFromGitHub(
         githubVersion,

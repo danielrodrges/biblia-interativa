@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useSwipeable } from 'react-swipeable';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Verse } from '@/mocks/bibleChapter';
+
+interface Verse {
+  number: number;
+  text: string;
+}
 
 interface ReaderContentProps {
   verses: Verse[];
@@ -16,58 +18,25 @@ const fontSizeClasses = {
   L: 'text-xl leading-loose',
 };
 
-// Versículos por página fixos - mais simples e rápido
-const VERSES_PER_PAGE = {
-  S: 12,
-  M: 10,
-  L: 8,
-};
-
 export default function ReaderContent({ verses, fontSize }: ReaderContentProps) {
-  const [currentPage, setCurrentPage] = useState(0);
-  
-  const versesPerPage = VERSES_PER_PAGE[fontSize];
-
-  // Calcula páginas usando useMemo
-  const pages = useMemo(() => {
-    const newPages: Verse[][] = [];
-    for (let i = 0; i < verses.length; i += versesPerPage) {
-      newPages.push(verses.slice(i, i + versesPerPage));
-    }
-    return newPages;
-  }, [verses, versesPerPage]);
-
-  // Reset para primeira página ao mudar de capítulo
-  useEffect(() => {
-    setCurrentPage(0);
-  }, [verses]);
-
-  const totalPages = pages.length;
-
-  const goToPreviousPage = useCallback(() => {
-    setCurrentPage(prev => Math.max(0, prev - 1));
-  }, []);
-
-  const goToNextPage = useCallback(() => {
-    setCurrentPage(prev => Math.min(totalPages - 1, prev + 1));
-  }, [totalPages]);
-
-  // Configuração do swipe
-  const swipeHandlers = useSwipeable({
-    onSwipedLeft: goToNextPage,
-    onSwipedRight: goToPreviousPage,
-    trackMouse: false,
-    trackTouch: true,
-    delta: 50,
-    preventScrollOnSwipe: false,
-  });
-
-  const currentVerses = pages[currentPage] || [];
-  const canGoPrevious = currentPage > 0;
-  const canGoNext = currentPage < totalPages - 1;
-
+  // Renderizar todos os versículos de uma vez (mais simples e rápido)
   return (
-    <div className="flex-1 flex flex-col relative">{/* Conteúdo com swipe */}
+    <div className="flex-1 overflow-y-auto px-6 py-8">
+      <div className="max-w-[720px] mx-auto">
+        <div className={`space-y-4 ${fontSizeClasses[fontSize]} text-gray-800 dark:text-gray-200`}>
+          {verses.map((verse) => (
+            <p key={verse.number} className="text-justify">
+              <span className="inline-block w-8 text-sm font-semibold text-blue-600 dark:text-blue-400 mr-2">
+                {verse.number}
+              </span>
+              <span>{verse.text}</span>
+            </p>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}{/* Conteúdo com swipe */}
       <div
         {...swipeHandlers}
         className="flex-1 overflow-y-auto px-6 py-8"

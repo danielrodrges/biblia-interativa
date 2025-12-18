@@ -4,22 +4,14 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ReaderHeader from '@/components/custom/reader/ReaderHeader';
 import ReaderContent from '@/components/custom/reader/ReaderContent';
-import ReaderControls from '@/components/custom/reader/ReaderControls';
-import SubtitleOverlay from '@/components/custom/reader/SubtitleOverlay';
 import { useReadingPrefs } from '@/hooks/useReadingPrefs';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
-import { useSubtitleSync } from '@/hooks/useSubtitleSync';
 import { loadBibleChapter, BibleChapter } from '@/lib/bible-loader';
 import { getNextChapter, getPreviousChapter } from '@/lib/bible-navigation';
-import { mockSubtitles } from '@/mocks/subtitles';
-import { mockAudioUrl } from '@/mocks/audio';
 import { X, Type, Languages, Loader2 } from 'lucide-react';
 
 export default function ReaderPage() {
   const router = useRouter();
   const { prefs, savePrefs, hasValidPrefs, isLoaded } = useReadingPrefs();
-  const { state, currentTime, play, pause, stop } = useAudioPlayer(mockAudioUrl);
-  const activeSubtitle = useSubtitleSync(currentTime, mockSubtitles, prefs.subtitleEnabled && state !== 'idle');
   
   const [showSettings, setShowSettings] = useState(false);
   const [currentBook, setCurrentBook] = useState('JHN'); // João como padrão
@@ -44,20 +36,27 @@ export default function ReaderPage() {
       setLoadError(null);
 
       try {
-        const data = await loadBibleChapter(
+        // Timeout de 10 segundos
+        const timeoutPromise = new Promise<null>((_, reject) => 
+          setTimeout(() => reject(new Error('Tempo limite excedido')), 10000)
+        );
+
+        const dataPromise = loadBibleChapter(
           currentBook,
           currentChapter,
           prefs.bibleVersion!
         );
 
+        const data = await Promise.race([dataPromise, timeoutPromise]);
+
         if (data) {
           setChapterData(data);
         } else {
-          setLoadError('Capítulo não encontrado');
+          setLoadError('Capítulo não encontrado no banco de dados');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erro ao carregar capítulo:', error);
-        setLoadError('Erro ao carregar capítulo');
+        setLoadError(error.message || 'Erro ao carregar capítulo');
       } finally {
         setIsLoadingChapter(false);
       }
@@ -144,20 +143,33 @@ export default function ReaderPage() {
         </>
       ) : null}
 
-      <SubtitleOverlay
-        text={activeSubtitle}
-        fontSize={prefs.subtitleFontSize}
-        isVisible={prefs.subtitleEnabled && state === 'playing'}
-      />
-
-      <ReaderControls
-        state={state}
-        onPlay={play}
-        onPause={pause}
-        onStop={stop}
-        onPrevChapter={canGoPrevious() ? handlePreviousChapter : undefined}
-        onNextChapter={canGoNext() ? handleNextChapter : undefined}
-      />
+      {/* Navegação de Capítulos */}
+      <div className="fixed bottom-20 left-0 right-0 z-40 bg-white/98 dark:bg-gray-900/98 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 shadow-lg">
+        <div className="max-w-[720px] mx-auto px-6 py-4 flex items-center justify-center gap-6">
+          <button
+            onClick={handlePreviousChapter}
+            disabled={!canGoPrevious()}
+            className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+              canGoPrevious()
+                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            ← Anterior
+          </button>
+          <button
+            onClick={handleNextChapter}
+            disabled={!canGoNext()}
+            className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+              canGoNext()
+                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            Próximo →
+          </button>
+        </div>
+      </div>
 
       {/* Settings Modal */}
       {showSettings && (
@@ -198,48 +210,6 @@ export default function ReaderPage() {
                     </button>
                   ))}
                 </div>
-              </div>
-
-              {/* Legendas */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Languages className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                    <label className="font-semibold text-gray-900 dark:text-white">
-                      Legendas
-                    </label>
-                  </div>
-                  <button
-                    onClick={() => savePrefs({ subtitleEnabled: !prefs.subtitleEnabled })}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      prefs.subtitleEnabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        prefs.subtitleEnabled ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
-                
-                {prefs.subtitleEnabled && (
-                  <div className="flex gap-3 mt-3">
-                    {(['S', 'M', 'L'] as const).map((size) => (
-                      <button
-                        key={size}
-                        onClick={() => savePrefs({ subtitleFontSize: size })}
-                        className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-medium transition-all ${
-                          prefs.subtitleFontSize === size
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                            : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
-                        }`}
-                      >
-                        {size === 'S' ? 'P' : size === 'M' ? 'M' : 'G'}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
 
               {/* Idiomas Configurados */}
