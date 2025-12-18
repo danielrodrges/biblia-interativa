@@ -48,8 +48,7 @@ export default function GitHubBibleTestPage() {
       
       if (text) {
         setVerses([{
-          book: 'João',
-          bookAbbrev: 'jn',
+          bookAbbrev: 'jo',
           chapter: 3,
           verse: 16,
           text,
@@ -260,7 +259,7 @@ export default function GitHubBibleTestPage() {
                 {verses.map((verse, index) => (
                   <div key={index} className="bg-white rounded-xl p-4 shadow-sm">
                     <div className="text-sm font-semibold text-purple-600 mb-2">
-                      {verse.book} {verse.chapter}:{verse.verse}
+                      {verse.bookAbbrev} {verse.chapter}:{verse.verse}
                     </div>
                     <p className="text-gray-700 leading-relaxed">
                       {verse.text}
