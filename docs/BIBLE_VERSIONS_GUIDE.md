@@ -1,5 +1,13 @@
 # Guia de Integração - Versões da Bíblia
 
+## ✅ API Configurada!
+
+A integração com a **Scripture API (api.bible)** está **ativa e funcionando**!
+
+- **Endpoint:** https://api.scripture.api.bible/v1
+- **Status:** ✅ Configurado
+- **Versões disponíveis:** NVI, ARA, ARC, KJV, NIV, ESV e mais
+
 ## Versões Disponíveis no App
 
 O app agora suporta as **5 principais versões da Bíblia em Português do Brasil**:
