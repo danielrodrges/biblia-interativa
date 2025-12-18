@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BookOpen, Languages, Settings } from 'lucide-react';
+import { Home, BookOpen, Languages, User } from 'lucide-react';
 
 export default function BottomNav() {
   const pathname = usePathname();
@@ -11,7 +11,7 @@ export default function BottomNav() {
     { href: '/inicio', icon: Home, label: 'Início' },
     { href: '/leitura', icon: BookOpen, label: 'Leitura' },
     { href: '/praticar', icon: Languages, label: 'Praticar' },
-    { href: '/configuracoes', icon: Settings, label: 'Config.' },
+    { href: '/perfil', icon: User, label: 'Perfil' },
   ];
 
   return (
