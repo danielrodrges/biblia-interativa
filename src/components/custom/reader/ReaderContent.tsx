@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useSwipeable } from 'react-swipeable';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Verse } from '@/mocks/bibleChapter';
@@ -25,61 +25,74 @@ const VERSE_HEIGHT_ESTIMATE = {
 
 export default function ReaderContent({ verses, fontSize }: ReaderContentProps) {
   const [currentPage, setCurrentPage] = useState(0);
-  const [pages, setPages] = useState<Verse[][]>([]);
+  const [versesPerPage, setVersesPerPage] = useState(10);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Calcula páginas baseado na altura da tela
-  useEffect(() => {
-    const calculatePages = () => {
-      if (!containerRef.current) return;
+  // Calcula páginas usando useMemo para evitar recálculo desnecessário
+  const pages = useMemo(() => {
+    const newPages: Verse[][] = [];
+    for (let i = 0; i < verses.length; i += versesPerPage) {
+      newPages.push(verses.slice(i, i + versesPerPage));
+    }
+    return newPages;
+  }, [verses, versesPerPage]);
 
-      // Altura disponível para o conteúdo (descontando header ~80px, footer ~160px, padding ~64px)
+  // Calcula versículos por página baseado na altura da tela
+  useEffect(() => {
+    const calculateVersesPerPage = () => {
       const availableHeight = window.innerHeight - 304;
       const verseHeight = VERSE_HEIGHT_ESTIMATE[fontSize];
-      const versesPerPage = Math.floor(availableHeight / verseHeight);
+      const calculated = Math.floor(availableHeight / verseHeight);
+      const final = Math.max(3, calculated);
       
-      // Garante pelo menos 3 versículos por página
-      const finalVersesPerPage = Math.max(3, versesPerPage);
-
-      const newPages: Verse[][] = [];
-      for (let i = 0; i < verses.length; i += finalVersesPerPage) {
-        newPages.push(verses.slice(i, i + finalVersesPerPage));
-      }
-
-      setPages(newPages);
-      setCurrentPage(0); // Volta para primeira página ao mudar de capítulo
+      setVersesPerPage(final);
     };
 
-    calculatePages();
+    calculateVersesPerPage();
     
-    // Recalcula ao redimensionar a janela
-    window.addEventListener('resize', calculatePages);
-    return () => window.removeEventListener('resize', calculatePages);
-  }, [verses, fontSize]);
+    // Debounce do resize para evitar múltiplos recálculos
+    let timeoutId: NodeJS.Timeout;
+    const handleResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(calculateVersesPerPage, 150);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [fontSize]);
+
+  // Reset para primeira página ao mudar de capítulo
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [verses]);
 
   const totalPages = pages.length;
   const canGoPrevious = currentPage > 0;
   const canGoNext = currentPage < totalPages - 1;
 
-  const goToPreviousPage = () => {
-    if (canGoPrevious) {
+  const goToPreviousPage = useCallback(() => {
+    if (currentPage > 0) {
       setCurrentPage(prev => prev - 1);
     }
-  };
+  }, [currentPage]);
 
-  const goToNextPage = () => {
-    if (canGoNext) {
+  const goToNextPage = useCallback(() => {
+    if (currentPage < totalPages - 1) {
       setCurrentPage(prev => prev + 1);
     }
-  };
+  }, [currentPage, totalPages]);
 
-  // Configuração do swipe
+  // Configuração do swipe com callbacks memoizados
   const swipeHandlers = useSwipeable({
-    onSwipedLeft: () => goToNextPage(),
-    onSwipedRight: () => goToPreviousPage(),
-    trackMouse: true,
+    onSwipedLeft: goToNextPage,
+    onSwipedRight: goToPreviousPage,
+    trackMouse: false, // Desabilita mouse tracking para melhor performance
     trackTouch: true,
-    delta: 50, // Mínimo de 50px para considerar um swipe
+    delta: 50,
+    preventScrollOnSwipe: false,
   });
 
   const currentVerses = pages[currentPage] || [];

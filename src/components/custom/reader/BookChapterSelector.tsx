@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ChevronDown, Book, Hash } from 'lucide-react';
 import { BIBLE_BOOKS, type BookInfo } from '@/lib/bible-navigation';
 
@@ -18,7 +18,25 @@ export default function BookChapterSelector({
   const [showBookPicker, setShowBookPicker] = useState(false);
   const [showChapterPicker, setShowChapterPicker] = useState(false);
 
-  const currentBookInfo = BIBLE_BOOKS.find(b => b.code === currentBook);
+  const currentBookInfo = useMemo(
+    () => BIBLE_BOOKS.find(b => b.code === currentBook),
+    [currentBook]
+  );
+
+  const oldTestamentBooks = useMemo(
+    () => BIBLE_BOOKS.filter(b => b.testament === 'old'),
+    []
+  );
+
+  const newTestamentBooks = useMemo(
+    () => BIBLE_BOOKS.filter(b => b.testament === 'new'),
+    []
+  );
+
+  const chapterNumbers = useMemo(
+    () => currentBookInfo ? Array.from({ length: currentBookInfo.chapters }, (_, i) => i + 1) : [],
+    [currentBookInfo]
+  );
 
   const handleBookSelect = (book: BookInfo) => {
     onNavigate(book.code, 1);
@@ -73,7 +91,7 @@ export default function BookChapterSelector({
                   ANTIGO TESTAMENTO
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {BIBLE_BOOKS.filter(b => b.testament === 'old').map(book => (
+                  {oldTestamentBooks.map(book => (
                     <button
                       key={book.code}
                       onClick={() => handleBookSelect(book)}
@@ -95,7 +113,7 @@ export default function BookChapterSelector({
                   NOVO TESTAMENTO
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {BIBLE_BOOKS.filter(b => b.testament === 'new').map(book => (
+                  {newTestamentBooks.map(book => (
                     <button
                       key={book.code}
                       onClick={() => handleBookSelect(book)}
@@ -136,7 +154,7 @@ export default function BookChapterSelector({
             
             <div className="overflow-y-auto p-4">
               <div className="grid grid-cols-5 sm:grid-cols-6 gap-2">
-                {Array.from({ length: currentBookInfo.chapters }, (_, i) => i + 1).map(chapter => (
+                {chapterNumbers.map(chapter => (
                   <button
                     key={chapter}
                     onClick={() => handleChapterSelect(chapter)}
