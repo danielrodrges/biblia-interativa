@@ -31,7 +31,7 @@ export default function ConfiguracoesPage() {
     
     if (versionId) {
       const version = getVersionById(versionId);
-      setCurrentVersion(version);
+      setCurrentVersion(version || null);
     }
   }, []);
 
@@ -54,7 +54,7 @@ export default function ConfiguracoesPage() {
     setCurrentLanguage(lang);
     if (versionId) {
       const version = getVersionById(versionId);
-      setCurrentVersion(version);
+      setCurrentVersion(version || null);
     }
   };
 
