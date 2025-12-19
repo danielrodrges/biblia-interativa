@@ -57,15 +57,19 @@ export async function translateText(text: string, targetLang: 'en' | 'es' | 'it'
   // Verificar cache
   const cacheKey = `pt-${targetLang}:${text}`;
   if (translationCache.has(cacheKey)) {
-    return translationCache.get(cacheKey)!;
+    const cached = translationCache.get(cacheKey)!;
+    console.log(`💾 Usando tradução em cache para ${targetLang}:`, text.substring(0, 50), '->', cached.substring(0, 50));
+    return cached;
   }
 
   try {
-    // Usar API do Google Translate com timeout de 3 segundos
+    // Usar API do Google Translate com timeout de 5 segundos (aumentado)
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=pt&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
     
+    console.log(`🌐 Traduzindo para ${targetLang}:`, text.substring(0, 50) + '...');
+    
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
     
     const response = await fetch(url, { 
       signal: controller.signal,
@@ -76,15 +80,30 @@ export async function translateText(text: string, targetLang: 'en' | 'es' | 'it'
     clearTimeout(timeoutId);
     
     if (!response.ok) {
-      throw new Error('Falha na tradução');
+      console.error(`❌ Erro HTTP ${response.status}:`, response.statusText);
+      throw new Error(`Falha na tradução: HTTP ${response.status}`);
     }
 
     const data = await response.json();
+    console.log('📦 Resposta da API:', data);
     
     // A resposta vem em formato: [[[tradução, original, ...]]]
-    const translated = data[0].map((item: any[]) => item[0]).join('');
+    if (!data || !data[0] || !Array.isArray(data[0])) {
+      console.error('❌ Formato de resposta inválido:', data);
+      throw new Error('Formato de resposta inválido da API');
+    }
     
-    // Armazenar no cache
+    const translated = data[0].map((item: any[]) => item[0]).join('');
+    console.log(`✅ Traduzido com sucesso para ${targetLang}:`, translated.substring(0, 50) + '...');
+    
+    // Verificar se a tradução é diferente do original (evitar armazenar não-traduções)
+    const isSimilar = translated.toLowerCase().trim() === text.toLowerCase().trim();
+    if (isSimilar) {
+      console.warn('⚠️ Tradução retornou texto idêntico ao original - NÃO será cacheada');
+      return text; // Retornar sem cachear para tentar novamente depois
+    }
+    
+    // Armazenar no cache APENAS se foi traduzido de fato
     translationCache.set(cacheKey, translated);
     
     // Salvar no localStorage a cada 10 traduções (para não sobrecarregar)
@@ -93,10 +112,15 @@ export async function translateText(text: string, targetLang: 'en' | 'es' | 'it'
     }
     
     return translated;
-  } catch (error) {
-    console.warn('⚠️ Erro na tradução, mantendo português:', error);
-    // Armazenar texto original no cache para não tentar novamente
-    translationCache.set(cacheKey, text);
+  } catch (error: any) {
+    console.error('❌ ERRO NA TRADUÇÃO:', {
+      mensagem: error.message,
+      erro: error,
+      texto: text.substring(0, 100),
+      idioma: targetLang
+    });
+    // NÃO armazenar no cache para permitir retry
+    // translationCache.set(cacheKey, text); // REMOVIDO
     return text; // Fallback: retornar texto original
   }
 }
@@ -171,4 +195,23 @@ export async function translateBatch(texts: string[], targetLang: 'en' | 'es' | 
  */
 export function clearTranslationCache() {
   translationCache.clear();
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(TRANSLATION_STORAGE_KEY);
+    console.log('🗑️ Cache de traduções limpo completamente');
+  }
+}
+
+/**
+ * Obter estatísticas do cache
+ */
+export function getTranslationCacheStats() {
+  return {
+    totalEntries: translationCache.size,
+    entries: Array.from(translationCache.entries()).map(([key, value]) => ({
+      key,
+      original: key.split(':')[1]?.substring(0, 30),
+      translated: value.substring(0, 30),
+      language: key.split('-')[1]?.split(':')[0]
+    }))
+  };
 }
