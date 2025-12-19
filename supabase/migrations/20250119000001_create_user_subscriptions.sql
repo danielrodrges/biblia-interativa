@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS user_subscriptions (
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   stripe_customer_id TEXT,
   stripe_subscription_id TEXT,
-  plan_type TEXT CHECK (plan_type IN ('free', 'premium', 'family')) DEFAULT 'free',
+  plan_type TEXT CHECK (plan_type IN ('free', 'premium')) DEFAULT 'free',
   status TEXT CHECK (status IN ('active', 'canceled', 'past_due', 'trialing', 'incomplete')) DEFAULT 'active',
   current_period_start TIMESTAMPTZ,
   current_period_end TIMESTAMPTZ,
@@ -51,5 +51,5 @@ CREATE TRIGGER on_auth_user_created
 
 -- Comentários
 COMMENT ON TABLE user_subscriptions IS 'Assinaturas de usuários vinculadas ao Stripe';
-COMMENT ON COLUMN user_subscriptions.plan_type IS 'Tipo de plano: free, premium, family';
+COMMENT ON COLUMN user_subscriptions.plan_type IS 'Tipo de plano: free, premium';
 COMMENT ON COLUMN user_subscriptions.status IS 'Status da assinatura: active, canceled, past_due, trialing, incomplete';

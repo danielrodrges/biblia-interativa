@@ -51,24 +51,6 @@ export default function PricingPage() {
       cta: 'Começar Teste Grátis',
       highlight: true,
       badge: 'Mais Popular'
-    },
-    {
-      id: 'family',
-      name: 'Família',
-      description: 'Para toda a família',
-      icon: <Crown className="w-8 h-8" />,
-      price: { monthly: 29.90, yearly: 269.90 },
-      features: [
-        'Tudo do plano Premium',
-        'Até 6 contas',
-        'Controle parental',
-        'Perfis individuais',
-        'Sincronização familiar',
-        'Recursos educacionais',
-        'Relatórios de progresso'
-      ],
-      cta: 'Começar Teste Grátis',
-      highlight: false
     }
   ];
 
@@ -94,8 +76,6 @@ export default function PricingPage() {
       const priceMap: Record<string, string> = {
         'premium-monthly': process.env.NEXT_PUBLIC_STRIPE_PRICE_PREMIUM_MONTHLY || '',
         'premium-yearly': process.env.NEXT_PUBLIC_STRIPE_PRICE_PREMIUM_YEARLY || '',
-        'family-monthly': process.env.NEXT_PUBLIC_STRIPE_PRICE_FAMILY_MONTHLY || '',
-        'family-yearly': process.env.NEXT_PUBLIC_STRIPE_PRICE_FAMILY_YEARLY || '',
       };
 
       const priceKey = `${planId}-${billingCycle}`;

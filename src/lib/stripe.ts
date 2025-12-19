@@ -19,15 +19,10 @@ export const stripe = stripeSecretKey
 export const STRIPE_PLANS = {
   premium_monthly: process.env.STRIPE_PRICE_PREMIUM_MONTHLY || 'price_premium_monthly',
   premium_yearly: process.env.STRIPE_PRICE_PREMIUM_YEARLY || 'price_premium_yearly',
-  family_monthly: process.env.STRIPE_PRICE_FAMILY_MONTHLY || 'price_family_monthly',
-  family_yearly: process.env.STRIPE_PRICE_FAMILY_YEARLY || 'price_family_yearly',
 };
 
 // Mapear plan_id para tipo de plano
-export function getPlanType(priceId: string): 'premium' | 'family' {
-  if (priceId.includes('family')) {
-    return 'family';
-  }
+export function getPlanType(priceId: string): 'premium' {
   return 'premium';
 }
 
