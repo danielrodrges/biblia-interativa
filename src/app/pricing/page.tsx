@@ -23,8 +23,8 @@ export default function PricingPage() {
       icon: <Shield className="w-8 h-8" />,
       price: { monthly: 0, yearly: 0 },
       features: [
-        'Acesso a todas as versões',
-        '1 idioma de áudio',
+        'Bíblia em Português (NVI, ACF, ARA)',
+        'Áudio em Português',
         'Leitura ilimitada',
         'Marcadores básicos',
         'Anúncios ocasionais'
@@ -35,20 +35,21 @@ export default function PricingPage() {
     {
       id: 'premium',
       name: 'Premium',
-      description: 'Para leitores dedicados',
-      icon: <Zap className="w-8 h-8" />,
-      price: { monthly: 19.90, yearly: 179.90 },
+      description: 'Acesso completo sem limites',
+      icon: <Crown className="w-8 h-8" />,
+      price: { monthly: 9.90, yearly: 99.00 },
       features: [
         'Tudo do plano Grátis',
-        '5 idiomas de áudio',
+        'Todos os idiomas disponíveis',
+        'Áudios em múltiplos idiomas',
         'Tradução em tempo real',
+        'Exercícios interativos ilimitados',
         'Modo offline completo',
         'Sem anúncios',
-        'Exercícios interativos',
         'Planos de leitura personalizados',
         'Suporte prioritário'
       ],
-      cta: 'Começar Teste Grátis',
+      cta: 'Começar Teste Grátis (7 dias)',
       highlight: true,
       badge: 'Mais Popular'
     }

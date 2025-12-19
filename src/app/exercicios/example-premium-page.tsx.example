@@ -1,0 +1,33 @@
+'use client';
+
+import { useSubscription } from '@/hooks/useSubscription';
+import PremiumBlocker from '@/components/custom/premium-blocker';
+import { Loader2 } from 'lucide-react';
+
+export default function ExercisesPage() {
+  const { isPremium, isLoading, canAccessExercises } = useSubscription();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
+  if (!canAccessExercises()) {
+    return (
+      <PremiumBlocker
+        feature="Exercícios Interativos"
+        description="Os exercícios são exclusivos para assinantes Premium. Aprenda idiomas enquanto estuda a Bíblia!"
+      />
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">Exercícios Interativos</h1>
+      {/* Conteúdo dos exercícios aqui */}
+    </div>
+  );
+}
