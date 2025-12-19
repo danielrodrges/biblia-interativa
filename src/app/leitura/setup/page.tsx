@@ -45,17 +45,17 @@ export default function SetupPage() {
   const versions = BIBLE_VERSIONS['pt-BR'];
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-blue-50 to-amber-50 dark:from-gray-900 dark:to-gray-800 px-4 sm:px-6 py-6 sm:py-12 pb-24">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen w-full bg-[#FAF9F6] dark:bg-stone-950 px-4 sm:px-6 py-6 sm:py-12 pb-24 flex items-center justify-center">
+      <div className="max-w-2xl w-full mx-auto">
         {/* Header */}
-        <div className="text-center mb-8 sm:mb-12">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg">
-            <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+        <div className="text-center mb-8 sm:mb-12 animate-in slide-in-from-bottom-4 fade-in duration-500">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-stone-100 dark:bg-stone-900 rounded-3xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-sm">
+            <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-stone-800 dark:text-stone-200" />
           </div>
-          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3">
+          <h1 className="text-2xl sm:text-4xl font-serif font-bold text-stone-800 dark:text-stone-100 mb-2 sm:mb-3">
             Configure sua leitura
           </h1>
-          <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400">
+          <p className="text-base sm:text-lg text-stone-600 dark:text-stone-400">
             {step === 1 && 'Selecione sua versão da Bíblia'}
             {step === 2 && 'Qual idioma você quer praticar?'}
           </p>
@@ -66,17 +66,17 @@ export default function SetupPage() {
           {[1, 2].map((s) => (
             <div
               key={s}
-              className={`h-2 rounded-full transition-all ${
-                s <= step ? 'w-12 bg-blue-500' : 'w-8 bg-gray-300 dark:bg-gray-700'
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                s <= step ? 'w-12 bg-stone-800 dark:bg-stone-200' : 'w-8 bg-stone-200 dark:bg-stone-800'
               }`}
             />
           ))}
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-8">
+        <div className="bg-white dark:bg-stone-900 rounded-3xl shadow-xl shadow-stone-200/50 dark:shadow-none p-4 sm:p-8 border border-stone-100 dark:border-stone-800 animate-in slide-in-from-bottom-8 fade-in duration-700 delay-150">
           {/* Step 1: Versão da Bíblia */}
           {step === 1 && (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {versions.map((version) => (
                 <button
                   key={version.id}
@@ -84,25 +84,27 @@ export default function SetupPage() {
                     setBibleVersion(version.id);
                     setStep(2);
                   }}
-                  className={`w-full flex items-center justify-between p-5 rounded-xl border-2 transition-all text-left ${
+                  className={`w-full flex items-center justify-between p-5 rounded-2xl border transition-all duration-200 text-left ${
                     bibleVersion === version.id
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600'
+                      ? 'border-stone-800 bg-stone-50 dark:border-stone-200 dark:bg-stone-800 ring-1 ring-stone-800 dark:ring-stone-200'
+                      : 'border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 bg-white dark:bg-stone-900'
                   }`}
                 >
                   <div>
-                    <div className="font-bold text-lg text-gray-900 dark:text-white">
+                    <div className="font-serif font-bold text-lg text-stone-900 dark:text-stone-100">
                       {version.id}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="text-sm text-stone-700 dark:text-stone-300 mt-1">
                       {version.name}
                     </div>
-                    <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                    <div className="text-xs text-stone-500 dark:text-stone-400 mt-1">
                       {version.source}
                     </div>
                   </div>
                   {bibleVersion === version.id && (
-                    <Check className="w-6 h-6 text-blue-500" />
+                    <div className="bg-stone-800 dark:bg-stone-200 rounded-full p-1">
+                      <Check className="w-4 h-4 text-white dark:text-stone-900" />
+                    </div>
                   )}
                 </button>
               ))}
@@ -113,33 +115,35 @@ export default function SetupPage() {
           {step === 2 && (
             <div className="space-y-3 sm:space-y-4">
               <div className="mb-4 text-center">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                <h2 className="text-xl sm:text-2xl font-serif font-bold text-stone-800 dark:text-stone-100 mb-2">
                   Qual idioma você quer praticar?
                 </h2>
-                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+                <p className="text-sm sm:text-base text-stone-600 dark:text-stone-400">
                   Escolha entre os {LANGUAGES.length} idiomas disponíveis
                 </p>
               </div>
               
-              <div className="grid grid-cols-2 sm:grid-cols-1 gap-3 sm:gap-4 mb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-1 gap-3 sm:gap-3 mb-4">
                 {LANGUAGES.map((lang, index) => (
                   <button
                     key={lang.code}
                     onClick={() => setPracticeLanguage(lang.code)}
-                    className={`relative w-full flex flex-col sm:flex-row items-center justify-center sm:justify-between p-4 sm:p-5 rounded-xl border-2 transition-all min-h-[100px] sm:min-h-0 ${
+                    className={`relative w-full flex flex-col sm:flex-row items-center justify-center sm:justify-between p-4 sm:p-5 rounded-2xl border transition-all duration-200 min-h-[100px] sm:min-h-0 ${
                       practiceLanguage === lang.code
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-sm'
+                        ? 'border-stone-800 bg-stone-50 dark:border-stone-200 dark:bg-stone-800 ring-1 ring-stone-800 dark:ring-stone-200 shadow-md'
+                        : 'border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 hover:shadow-sm bg-white dark:bg-stone-900'
                     }`}
                   >
                     <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full justify-center sm:justify-start">
-                      <span className="text-4xl sm:text-4xl">{lang.flag}</span>
-                      <span className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white text-center sm:text-left">
+                      <span className="text-4xl sm:text-3xl">{lang.flag}</span>
+                      <span className="text-base sm:text-lg font-medium text-stone-800 dark:text-stone-200 text-center sm:text-left">
                         {lang.name}
                       </span>
                     </div>
                     {practiceLanguage === lang.code && (
-                      <Check className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 absolute top-2 right-2 sm:static" />
+                      <div className="bg-stone-800 dark:bg-stone-200 rounded-full p-1 absolute top-2 right-2 sm:static">
+                        <Check className="w-4 h-4 text-white dark:text-stone-900" />
+                      </div>
                     )}
                   </button>
                 ))}
@@ -148,17 +152,17 @@ export default function SetupPage() {
               <div className="flex gap-2 sm:gap-3 pt-4">
                 <button
                   onClick={() => setStep(1)}
-                  className="flex-1 py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm sm:text-base font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+                  className="flex-1 py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-400 text-sm sm:text-base font-medium hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
                 >
                   Voltar
                 </button>
                 <button
                   onClick={handleComplete}
                   disabled={!practiceLanguage}
-                  className={`flex-1 py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl text-sm sm:text-base font-semibold transition-all ${
+                  className={`flex-1 py-3 sm:py-4 px-4 sm:px-6 rounded-2xl text-sm sm:text-base font-medium transition-all ${
                     practiceLanguage
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg'
-                      : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                      ? 'bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 shadow-lg hover:opacity-90'
+                      : 'bg-stone-100 dark:bg-stone-800 text-stone-400 dark:text-stone-600 cursor-not-allowed'
                   }`}
                 >
                   Começar
