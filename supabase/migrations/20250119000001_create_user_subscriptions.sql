@@ -47,7 +47,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW
-  EXECUTE FUNCTION create_free_subscription();
+  EXECUTE PROCEDURE create_free_subscription();
 
 -- Comentários
 COMMENT ON TABLE user_subscriptions IS 'Assinaturas de usuários vinculadas ao Stripe';
