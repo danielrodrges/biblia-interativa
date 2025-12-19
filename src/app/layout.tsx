@@ -4,6 +4,8 @@ import { Inter, Crimson_Pro } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/custom/bottom-nav";
 import { NavigationProvider } from "@/contexts/NavigationContext";
+import { Analytics } from '@vercel/analytics/react';
+import CookieBanner from '@/components/custom/cookie-banner';
 
 const inter = Inter({
   variable: "--font-inter",
@@ -19,14 +21,53 @@ const crimsonPro = Crimson_Pro({
 });
 
 export const metadata: Metadata = {
-  title: "Bíblia Multilíngue Interativa",
-  description: "Pratique sua espiritualidade e aprenda um novo idioma através da leitura da Bíblia",
+  title: "Bíblia Interativa - Leitura Bíblica com Áudio em Múltiplos Idiomas",
+  description: "Transforme sua experiência de leitura bíblica com áudio profissional em vários idiomas, tradução em tempo real, exercícios interativos e planos de leitura personalizados. Acesse todas as versões da Bíblia gratuitamente.",
+  keywords: [
+    'bíblia online',
+    'bíblia com áudio',
+    'leitura bíblica',
+    'bíblia multilíngue',
+    'tradução bíblica',
+    'áudio bíblia',
+    'exercícios bíblicos',
+    'estudo bíblico',
+    'plano de leitura bíblica',
+    'bíblia interativa',
+  ],
+  authors: [{ name: 'Bíblia Interativa' }],
+  creator: 'Bíblia Interativa',
+  publisher: 'Bíblia Interativa',
   manifest: "/manifest.json",
   themeColor: "#3B82F6",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Bíblia Multilíngue",
+    title: "Bíblia Interativa",
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'pt_BR',
+    url: 'https://bibliainterativa.com',
+    title: 'Bíblia Interativa - Leitura Bíblica com Áudio em Múltiplos Idiomas',
+    description: 'Transforme sua experiência de leitura bíblica com áudio profissional, tradução em tempo real e exercícios interativos.',
+    siteName: 'Bíblia Interativa',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Bíblia Interativa - Leitura Bíblica com Áudio',
+    description: 'Experiência completa de leitura bíblica com áudio em múltiplos idiomas e tradução em tempo real.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 
@@ -48,6 +89,8 @@ export default function RootLayout({
           {children}
           <BottomNav />
         </NavigationProvider>
+        <CookieBanner />
+        <Analytics />
       </body>
     </html>
   );
