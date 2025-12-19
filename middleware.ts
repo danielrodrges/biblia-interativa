@@ -32,12 +32,15 @@ const protectedRoutes = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Permitir acesso a arquivos estáticos e APIs
+  // Permitir acesso a arquivos estáticos, APIs e recursos públicos
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
     pathname.startsWith('/static') ||
-    pathname.includes('.') // manifest.json, sw.js, etc
+    pathname === '/manifest.json' ||
+    pathname === '/sw.js' ||
+    pathname.startsWith('/audio/') ||
+    pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|json|js|css|woff|woff2|ttf|eot)$/)
   ) {
     return NextResponse.next();
   }
@@ -139,8 +142,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder files (manifest.json, sw.js, etc)
+     * - All files with extensions (manifest.json, sw.js, images, fonts, etc)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|json|js|css)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.).*)',
   ],
 };
