@@ -53,7 +53,54 @@ if (typeof window !== 'undefined') {
 /**
  * Traduz texto de português para outro idioma usando Google Translate (via API pública)
  */
-export async function translateText(text: string, targetLang: 'en' | 'es' | 'it' | 'fr'): Promise<string> {
+/**
+ * Traduz usando API alternativa (MyMemory) como fallback
+ */
+async function translateWithFallback(text: string, targetLang: 'en' | 'es' | 'it' | 'fr'): Promise<string> {
+  try {
+    const langMap: Record<string, string> = {
+      'en': 'en-US',
+      'es': 'es-ES',
+      'it': 'it-IT',
+      'fr': 'fr-FR'
+    };
+    
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=pt-BR|${langMap[targetLang]}`;
+    
+    console.log('🔄 Tentando API alternativa (MyMemory)...');
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    
+    const response = await fetch(url, {
+      signal: controller.signal,
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.responseStatus === 200 && data.responseData?.translatedText) {
+      const translated = data.responseData.translatedText;
+      console.log('✅ Tradução via MyMemory bem-sucedida:', translated.substring(0, 50));
+      return translated;
+    }
+    
+    throw new Error('Resposta inválida da API MyMemory');
+  } catch (error: any) {
+    console.error('❌ Falha na API alternativa:', error.message);
+    return text; // Retornar original se tudo falhar
+  }
+}
+
+export async function translateText(text: string, targetLang: 'en' | 'es' | 'it' | 'fr', retryCount = 0): Promise<string> {
   // Verificar cache
   const cacheKey = `pt-${targetLang}:${text}`;
   if (translationCache.has(cacheKey)) {
@@ -62,20 +109,30 @@ export async function translateText(text: string, targetLang: 'en' | 'es' | 'it'
     return cached;
   }
 
+  const maxRetries = 3;
+  const timeoutMs = 10000; // 10 segundos para mobile
+
   try {
-    // Usar API do Google Translate com timeout de 5 segundos (aumentado)
+    // Usar API do Google Translate com timeout aumentado para mobile
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=pt&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
     
-    console.log(`🌐 Traduzindo para ${targetLang}:`, text.substring(0, 50) + '...');
+    console.log(`🌐 Traduzindo para ${targetLang} (tentativa ${retryCount + 1}/${maxRetries + 1}):`, text.substring(0, 50) + '...');
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     
     const response = await fetch(url, { 
       signal: controller.signal,
+      method: 'GET',
       headers: {
-        'User-Agent': 'Mozilla/5.0'
-      }
+        'Accept': 'application/json',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': 'https://translate.google.com/',
+        'Origin': 'https://translate.google.com'
+      },
+      mode: 'cors',
+      cache: 'no-cache'
     });
     clearTimeout(timeoutId);
     
@@ -85,7 +142,7 @@ export async function translateText(text: string, targetLang: 'en' | 'es' | 'it'
     }
 
     const data = await response.json();
-    console.log('📦 Resposta da API:', data);
+    console.log('📦 Resposta da API (primeiros elementos):', data[0]?.[0]);
     
     // A resposta vem em formato: [[[tradução, original, ...]]]
     if (!data || !data[0] || !Array.isArray(data[0])) {
@@ -115,12 +172,33 @@ export async function translateText(text: string, targetLang: 'en' | 'es' | 'it'
   } catch (error: any) {
     console.error('❌ ERRO NA TRADUÇÃO:', {
       mensagem: error.message,
-      erro: error,
+      erro: error.name,
       texto: text.substring(0, 100),
-      idioma: targetLang
+      idioma: targetLang,
+      tentativa: retryCount + 1
     });
-    // NÃO armazenar no cache para permitir retry
-    // translationCache.set(cacheKey, text); // REMOVIDO
+    
+    // Retry com backoff exponencial
+    if (retryCount < maxRetries) {
+      const delay = Math.min(1000 * Math.pow(2, retryCount), 5000); // Max 5s
+      console.log(`🔄 Tentando novamente em ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return translateText(text, targetLang, retryCount + 1);
+    }
+    
+    // Se todas as tentativas falharam, tentar API alternativa
+    console.log('🔄 Tentando API alternativa como último recurso...');
+    const fallbackResult = await translateWithFallback(text, targetLang);
+    
+    // Se a API alternativa funcionou, cachear o resultado
+    if (fallbackResult !== text) {
+      translationCache.set(cacheKey, fallbackResult);
+      saveCacheToStorage();
+      return fallbackResult;
+    }
+    
+    console.error(`❌ Todas as tentativas falharam. Retornando texto original.`);
+    // NÃO armazenar no cache para permitir retry na próxima vez
     return text; // Fallback: retornar texto original
   }
 }
@@ -167,10 +245,17 @@ export async function translateBatch(texts: string[], targetLang: 'en' | 'es' | 
   let successCount = 0;
   let failCount = 0;
   
-  // Aumentar tamanho do lote e remover delay para velocidade
-  const batchSize = 15; // Aumentado de 3 para 15
+  // Detectar se é mobile para ajustar estratégia
+  const isMobile = typeof window !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const batchSize = isMobile ? 5 : 10; // Lotes menores em mobile
+  const delayBetweenBatches = isMobile ? 500 : 200; // Mais delay em mobile
+  
+  console.log(`📱 Dispositivo: ${isMobile ? 'Mobile' : 'Desktop'}, Tamanho do lote: ${batchSize}, Delay: ${delayBetweenBatches}ms`);
+  
   for (let i = 0; i < texts.length; i += batchSize) {
     const batch = texts.slice(i, i + batchSize);
+    
+    console.log(`📦 Processando lote ${Math.floor(i / batchSize) + 1}/${Math.ceil(texts.length / batchSize)}`);
     
     const batchResults = await Promise.all(
       batch.map(async text => {
@@ -181,6 +266,11 @@ export async function translateBatch(texts: string[], targetLang: 'en' | 'es' | 
       })
     );
     translated.push(...batchResults);
+    
+    // Delay entre lotes para não sobrecarregar (especialmente em mobile)
+    if (i + batchSize < texts.length) {
+      await new Promise(resolve => setTimeout(resolve, delayBetweenBatches));
+    }
   }
   
   // Salvar cache após tradução completa
