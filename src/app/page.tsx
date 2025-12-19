@@ -2,13 +2,29 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { isSupabaseConfigured, getCurrentUser } from '@/lib/supabase';
 
 export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirecionar direto para /inicio (página inicial)
-    router.replace('/inicio');
+    const checkAuthAndRedirect = async () => {
+      if (isSupabaseConfigured()) {
+        const user = await getCurrentUser();
+        if (user) {
+          // Usuário autenticado → ir para início
+          router.replace('/inicio');
+        } else {
+          // Não autenticado → ir para welcome (landing page)
+          router.replace('/welcome');
+        }
+      } else {
+        // Sem Supabase configurado → ir direto para início (modo demo)
+        router.replace('/inicio');
+      }
+    };
+
+    checkAuthAndRedirect();
   }, [router]);
 
   return (
