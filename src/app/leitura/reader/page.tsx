@@ -634,7 +634,7 @@ function ReaderPageContent() {
             onClick={handleContentClick}
             style={{
               paddingTop: showControls ? '80px' : '20px',
-              paddingBottom: showControls ? '140px' : '20px',
+              paddingBottom: showControls ? '180px' : '100px', // Mais espaço em mobile
             }}
           >
             <ReaderContent
@@ -664,7 +664,7 @@ function ReaderPageContent() {
 
       {/* Controles de Voz flutuantes */}
       {chapterData && (
-        <div className={`absolute bottom-0 left-0 right-0 z-40 transition-all duration-300 pointer-events-none mb-16 ${
+        <div className={`absolute bottom-0 left-0 right-0 z-40 transition-all duration-300 pointer-events-none mb-20 md:mb-0 ${
           showControls ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
         }`}>
           <div className="bg-gradient-to-t from-[#FAF9F6] via-[#FAF9F6]/95 to-[#FAF9F6]/0 dark:from-gray-950 dark:via-gray-950/95 dark:to-gray-950/0 pt-8 pointer-events-auto">
@@ -683,7 +683,7 @@ function ReaderPageContent() {
       {/* Legendas em Tempo Real */}
       {chapterData && prefs.subtitleEnabled && speechState === 'speaking' && currentIndex >= 0 && (
         <div className={`absolute left-0 right-0 z-30 transition-all duration-300 ${
-          showControls ? 'bottom-32' : 'bottom-4'
+          showControls ? 'bottom-40 md:bottom-32' : 'bottom-24 md:bottom-4'
         }`}>
           <SubtitleDisplay
             text={verseTexts[currentIndex]}
