@@ -7,7 +7,7 @@ export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Sempre redireciona direto para /inicio
+    // Redirecionar direto para /inicio (página inicial)
     router.replace('/inicio');
   }, [router]);
 

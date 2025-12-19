@@ -44,10 +44,7 @@ export default function InicioPage() {
 
   useEffect(() => {
     const prefs = getPreferences();
-    if (!prefs.onboardingCompleted) {
-      router.push('/onboarding');
-      return;
-    }
+    // Não redireciona mais para onboarding - página inicial é sempre acessível
     setPreferences(prefs);
     setSuggestions(getRandomSuggestions(4));
   }, [router]);
@@ -62,7 +59,7 @@ export default function InicioPage() {
         timestamp: Date.now()
       }
     });
-    router.push(`/leitura?book=${suggestion.bookCode}&chapter=${suggestion.chapter}`);
+    router.push(`/leitura/reader?book=${suggestion.bookCode}&chapter=${suggestion.chapter}`);
   };
 
   if (!preferences) {

@@ -37,7 +37,7 @@ export default function SpeechControls({
 
   return (
     <div className="flex-shrink-0 bg-[#FAF9F6]/98 dark:bg-stone-950/98 backdrop-blur-md border-t border-stone-200 dark:border-stone-800 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] z-40">
-      <div className="max-w-[720px] mx-auto px-4 py-3">
+      <div className="max-w-md mx-auto px-4 py-3">
         <div className="flex items-center justify-center gap-4">
           {/* Ícone de Volume */}
           <Volume2 className="w-4 h-4 text-stone-400" />
