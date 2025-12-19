@@ -136,8 +136,9 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all paths except static files
+     * Match all paths except static files and public assets
+     * Explicitly exclude manifest.json, sw.js, and other public files
      */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|robots.txt|sitemap.xml|.*\\.svg|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.webp|.*\\.ico|.*\\.json|.*\\.js|.*\\.css|.*\\.woff|.*\\.woff2|.*\\.ttf|.*\\.eot|.*\\.map).*)',
   ],
 };
