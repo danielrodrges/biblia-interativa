@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Sem experimental
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -7,13 +8,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    remotePatterns: [
-      { protocol: 'https', hostname: '*.supabase.co' },
-      { protocol: 'https', hostname: 'images.unsplash.com' },
-    ],
-  },
-  experimental: {
-    optimizePackageImports: ['lucide-react'],
+    domains: ['umbgtudgphbwpkeoebry.supabase.co', 'images.unsplash.com'],
   },
 };
 
