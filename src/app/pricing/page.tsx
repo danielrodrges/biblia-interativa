@@ -75,18 +75,21 @@ export default function PricingPage() {
 
       // Usuário autenticado → criar checkout session
       const priceMap: Record<string, string> = {
-        'premium-monthly': process.env.NEXT_PUBLIC_STRIPE_PRICE_PREMIUM_MONTHLY || '',
-        'premium-yearly': process.env.NEXT_PUBLIC_STRIPE_PRICE_PREMIUM_YEARLY || '',
+        'premium-monthly': 'price_1SgD7EK0UayFnw7rorp4Y439',
+        'premium-yearly': 'price_1SgD7EK0UayFnw7rVjbTODaV',
       };
 
       const priceKey = `${planId}-${billingCycle}`;
       const priceId = priceMap[priceKey];
 
       if (!priceId) {
+        console.error('PriceKey não encontrado:', priceKey);
         alert('Configuração de preço não encontrada. Entre em contato com o suporte.');
         setLoading(null);
         return;
       }
+
+      console.log('✅ Criando checkout com:', { priceId, priceKey, userId: user.id });
 
       // Criar sessão de checkout
       const response = await fetch('/api/stripe/create-checkout', {
