@@ -10,6 +10,7 @@ const publicRoutes = [
   '/auth/login',
   '/auth/signup',
   '/auth/callback',
+  '/auth/confirm',
   '/auth/forgot-password',
   '/termos',
   '/privacidade',

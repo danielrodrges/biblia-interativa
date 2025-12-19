@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Sem experimental
+  reactStrictMode: true,
+  swcMinify: true,
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -8,8 +9,26 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    domains: ['umbgtudgphbwpkeoebry.supabase.co', 'images.unsplash.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'umbgtudgphbwpkeoebry.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+    ],
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
+  },
+  // Otimizações para produção
+  compress: true,
+  poweredByHeader: false,
+  generateEtags: true,
 };
 
 module.exports = nextConfig;

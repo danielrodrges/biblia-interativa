@@ -90,6 +90,13 @@ export async function signUpWithEmail(email: string, password: string, fullName:
     throw new Error('Supabase não está configurado. Configure as variáveis de ambiente.');
   }
 
+  // Definir URL de redirect baseada no ambiente
+  const redirectUrl = typeof window !== 'undefined' 
+    ? `${window.location.origin}/auth/callback`
+    : process.env.NEXT_PUBLIC_SITE_URL 
+      ? `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
+      : 'https://biblia-interativa-wine.vercel.app/auth/callback';
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -97,13 +104,32 @@ export async function signUpWithEmail(email: string, password: string, fullName:
       data: {
         full_name: fullName,
       },
-      emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
+      emailRedirectTo: redirectUrl,
     },
   });
   
   if (error) {
     console.error('Erro ao criar conta:', error);
     throw error;
+  }
+  
+  // Criar perfil manualmente após signup bem-sucedido
+  if (data.user && data.session) {
+    try {
+      // Criar perfil
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        full_name: fullName,
+      }, { onConflict: 'id' });
+
+      // Criar estatísticas de leitura
+      await supabase.from('reading_stats').upsert({
+        user_id: data.user.id,
+      }, { onConflict: 'user_id' });
+    } catch (profileError) {
+      console.warn('Erro ao criar perfil (trigger pode ter criado):', profileError);
+      // Não falhar se o trigger já criou
+    }
   }
   
   return data;
