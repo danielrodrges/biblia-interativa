@@ -32,15 +32,13 @@ const protectedRoutes = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Permitir acesso a arquivos estáticos, APIs e recursos públicos
+  // Permitir acesso a todos os arquivos estáticos sem processar
   if (
+    pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|json|js|css|woff|woff2|ttf|eot|map)$/) ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
     pathname.startsWith('/static') ||
-    pathname === '/manifest.json' ||
-    pathname === '/sw.js' ||
-    pathname.startsWith('/audio/') ||
-    pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|json|js|css|woff|woff2|ttf|eot)$/)
+    pathname.startsWith('/audio/')
   ) {
     return NextResponse.next();
   }
