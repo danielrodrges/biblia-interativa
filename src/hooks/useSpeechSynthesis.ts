@@ -86,7 +86,8 @@ export function useSpeechSynthesis(options: UseSpeechSynthesisOptions = {}) {
       utterance.pitch = options.pitch || 1.0;
       utterance.volume = options.volume || 1.0;
       
-      console.log(`🗣️ Falando texto ${index + 1}/${texts.length} [${utterance.rate.toFixed(2)}x]:`, text.substring(0, 100));
+      console.log(`🗣️ Falando texto ${index + 1}/${texts.length} [${utterance.rate.toFixed(2)}x] [${currentLang}]:`, text.substring(0, 100));
+      console.log(`📝 Texto completo que será falado:`, text);
 
       // Selecionar voz específica baseada no idioma
       const voices = window.speechSynthesis.getVoices();

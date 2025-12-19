@@ -473,6 +473,30 @@ function ReaderPageContent() {
 
   const handleStartReading = () => {
     if (verseTexts.length > 0) {
+      // Verificar se precisa de tradução e se ela está pronta
+      const needsTranslation = prefs.speechLanguage !== 'pt-BR';
+      const hasPortugueseText = chapterData && chapterData.verses.length > 0;
+      
+      if (needsTranslation && hasPortugueseText) {
+        const firstVerseOriginal = chapterData!.verses[0].text;
+        const firstVerseToSpeak = verseTexts[0];
+        
+        // Se o texto que vai ser falado é igual ao português, significa que a tradução não carregou
+        if (firstVerseToSpeak === firstVerseOriginal) {
+          console.warn('⚠️ TRADUÇÃO NÃO PRONTA! Aguardando...');
+          console.log('  Original (PT):', firstVerseOriginal.substring(0, 50));
+          console.log('  Para falar:', firstVerseToSpeak.substring(0, 50));
+          
+          // Mostrar mensagem ao usuário
+          alert('Por favor, aguarde enquanto preparamos a tradução. Tente novamente em alguns segundos.');
+          return;
+        }
+        
+        console.log('✅ Tradução pronta!');
+        console.log('  Original (PT):', firstVerseOriginal.substring(0, 50));
+        console.log('  Traduzido:', firstVerseToSpeak.substring(0, 50));
+      }
+      
       console.log('🎯 CONFIGURAÇÃO DE LEITURA:');
       console.log('  📖 Texto na TELA:', prefs.textLanguage);
       console.log('  🗣️ Voz FALADA:', prefs.speechLanguage);
@@ -557,15 +581,20 @@ function ReaderPageContent() {
       {isLoadingChapter || isTranslating ? (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center px-6">
-            <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400 mb-2">
-              {isTranslating ? 'Traduzindo para inglês...' : 'Carregando capítulo...'}
+            <Loader2 className="w-12 h-12 text-stone-800 dark:text-stone-200 animate-spin mx-auto mb-4" />
+            <p className="text-stone-700 dark:text-stone-300 mb-2 font-medium">
+              {isTranslating ? `Traduzindo para ${
+                prefs.speechLanguage === 'en-US' ? 'inglês' :
+                prefs.speechLanguage === 'es-ES' ? 'espanhol' :
+                prefs.speechLanguage === 'it-IT' ? 'italiano' :
+                prefs.speechLanguage === 'fr-FR' ? 'francês' : 'outro idioma'
+              }...` : 'Carregando capítulo...'}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500">
+            <p className="text-sm text-stone-600 dark:text-stone-400">
               {currentBook} {currentChapter} - {prefs.bibleVersion}
             </p>
             {isTranslating && (
-              <p className="text-xs text-blue-500 dark:text-blue-400 mt-2">
+              <p className="text-xs text-stone-500 dark:text-stone-400 mt-3">
                 🌐 Isso pode levar alguns segundos
               </p>
             )}
