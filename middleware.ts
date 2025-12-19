@@ -32,12 +32,12 @@ const protectedRoutes = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Permitir acesso a arquivos estáticos e APIs (exceto webhook)
+  // Permitir acesso a arquivos estáticos e APIs
   if (
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') && pathname !== '/api/stripe/webhook' ||
+    pathname.startsWith('/api') ||
     pathname.startsWith('/static') ||
-    pathname.includes('.')
+    pathname.includes('.') // manifest.json, sw.js, etc
   ) {
     return NextResponse.next();
   }
@@ -139,8 +139,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
+     * - public folder files (manifest.json, sw.js, etc)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|json|js|css)$).*)',
   ],
 };
