@@ -97,7 +97,12 @@ export async function signUpWithEmail(email: string, password: string, fullName:
       ? `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
       : 'https://biblia-interativa-wine.vercel.app/auth/callback';
 
-  const { data, error } = await supabase.auth.signUp({
+  console.log('🔍 SignUp Debug:');
+  console.log('Email:', email);
+  console.log('Redirect URL:', redirectUrl);
+
+  // Timeout para evitar espera infinita
+  const signupPromise = supabase.auth.signUp({
     email,
     password,
     options: {
@@ -107,28 +112,45 @@ export async function signUpWithEmail(email: string, password: string, fullName:
       emailRedirectTo: redirectUrl,
     },
   });
+
+  const timeoutPromise = new Promise((_, reject) => 
+    setTimeout(() => reject(new Error('Timeout ao criar conta. Tente novamente.')), 15000)
+  );
+
+  const { data, error } = await Promise.race([signupPromise, timeoutPromise]) as any;
   
   if (error) {
-    console.error('Erro ao criar conta:', error);
+    console.error('❌ Erro ao criar conta:', error);
     throw error;
   }
   
-  // Criar perfil manualmente após signup bem-sucedido
-  if (data.user && data.session) {
-    try {
-      // Criar perfil
-      await supabase.from('profiles').upsert({
-        id: data.user.id,
-        full_name: fullName,
-      }, { onConflict: 'id' });
+  console.log('✅ Signup response:', {
+    user: data.user?.id,
+    session: !!data.session,
+    identities: data.user?.identities?.length
+  });
 
-      // Criar estatísticas de leitura
-      await supabase.from('reading_stats').upsert({
-        user_id: data.user.id,
-      }, { onConflict: 'user_id' });
+  // Criar perfil manualmente se o usuário foi criado
+  // (mesmo sem sessão, quando confirmação de email é obrigatória)
+  if (data.user) {
+    try {
+      // Somente tentar criar perfil se já tem sessão (auto-confirmed)
+      if (data.session) {
+        await supabase.from('profiles').upsert({
+          id: data.user.id,
+          full_name: fullName,
+        }, { onConflict: 'id' });
+
+        await supabase.from('reading_stats').upsert({
+          user_id: data.user.id,
+        }, { onConflict: 'user_id' });
+        
+        console.log('✅ Perfil criado (auto-confirmed)');
+      } else {
+        console.log('⏳ Email de confirmação enviado. Perfil será criado após confirmação.');
+      }
     } catch (profileError) {
-      console.warn('Erro ao criar perfil (trigger pode ter criado):', profileError);
-      // Não falhar se o trigger já criou
+      console.warn('⚠️ Erro ao criar perfil (trigger pode criar):', profileError);
     }
   }
   
