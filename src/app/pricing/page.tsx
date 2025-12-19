@@ -2,12 +2,18 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, Zap, Crown, Shield, ArrowRight } from 'lucide-react';
+import { Check, Zap, Crown, Shield, ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { getCurrentUser } from '@/lib/supabase';
+import { loadStripe } from '@stripe/stripe-js';
+
+// Inicializar Stripe
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
 export default function PricingPage() {
   const router = useRouter();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [loading, setLoading] = useState<string | null>(null);
 
   const plans = [
     {
@@ -66,11 +72,68 @@ export default function PricingPage() {
     }
   ];
 
-  const handleSelectPlan = (planId: string) => {
+  const handleSelectPlan = async (planId: string) => {
     if (planId === 'free') {
       router.push('/auth/signup');
-    } else {
-      router.push(`/auth/signup?plan=${planId}`);
+      return;
+    }
+
+    setLoading(planId);
+
+    try {
+      // Verificar se usuário está autenticado
+      const user = await getCurrentUser();
+      
+      if (!user) {
+        // Não autenticado → redirecionar para signup com plano
+        router.push(`/auth/signup?plan=${planId}&billing=${billingCycle}`);
+        return;
+      }
+
+      // Usuário autenticado → criar checkout session
+      const priceMap: Record<string, string> = {
+        'premium-monthly': process.env.NEXT_PUBLIC_STRIPE_PRICE_PREMIUM_MONTHLY || '',
+        'premium-yearly': process.env.NEXT_PUBLIC_STRIPE_PRICE_PREMIUM_YEARLY || '',
+        'family-monthly': process.env.NEXT_PUBLIC_STRIPE_PRICE_FAMILY_MONTHLY || '',
+        'family-yearly': process.env.NEXT_PUBLIC_STRIPE_PRICE_FAMILY_YEARLY || '',
+      };
+
+      const priceKey = `${planId}-${billingCycle}`;
+      const priceId = priceMap[priceKey];
+
+      if (!priceId) {
+        alert('Configuração de preço não encontrada. Entre em contato com o suporte.');
+        setLoading(null);
+        return;
+      }
+
+      // Criar sessão de checkout
+      const response = await fetch('/api/stripe/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          priceId,
+          userId: user.id,
+          email: user.email,
+        }),
+      });
+
+      const { url, error } = await response.json();
+
+      if (error) {
+        alert(error);
+        setLoading(null);
+        return;
+      }
+
+      // Redirecionar para checkout do Stripe
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error('Erro ao criar checkout:', error);
+      alert('Erro ao processar pagamento. Tente novamente.');
+      setLoading(null);
     }
   };
 
@@ -167,14 +230,24 @@ export default function PricingPage() {
 
               <button
                 onClick={() => handleSelectPlan(plan.id)}
+                disabled={loading === plan.id}
                 className={`w-full py-4 rounded-2xl font-bold text-lg mb-6 transition-all flex items-center justify-center gap-2 ${
                   plan.highlight
-                    ? 'bg-stone-900 text-white hover:bg-stone-800 shadow-lg'
-                    : 'bg-stone-100 text-stone-900 hover:bg-stone-200'
+                    ? 'bg-stone-900 text-white hover:bg-stone-800 shadow-lg disabled:opacity-50'
+                    : 'bg-stone-100 text-stone-900 hover:bg-stone-200 disabled:opacity-50'
                 }`}
               >
-                {plan.cta}
-                <ArrowRight className="w-5 h-5" />
+                {loading === plan.id ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    {plan.cta}
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
               </button>
 
               <ul className="space-y-3">
