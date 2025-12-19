@@ -9,7 +9,6 @@ const API_ENDPOINT = process.env.NEXT_PUBLIC_BIBLE_API_ENDPOINT || 'https://api.
 const BIBLE_VERSION_IDS: Record<string, string> = {
   // Português (Brasil)
   'NVI': '06125adad2d5898a-01',  // Nova Versão Internacional
-  'BLT': 'd63894c8d9a7a503-01',  // Bíblia Livre Para Todos
   
   // Inglês
   'KJV': 'de4e12af7f28f599-01',  // King James Version

@@ -18,7 +18,6 @@ const BIBLE_VERSIONS = {
     { id: 'NVI', name: 'Nova Versão Internacional', source: 'Supabase' },
     { id: 'ARA', name: 'Almeida Revisada Atualizada', source: 'Supabase' },
     { id: 'ACF', name: 'Almeida Corrigida e Fiel', source: 'Supabase' },
-    { id: 'BLT', name: 'Bíblia Livre Para Todos', source: 'API' },
   ],
 };
 

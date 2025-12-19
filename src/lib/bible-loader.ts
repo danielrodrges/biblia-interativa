@@ -52,7 +52,6 @@ const VERSION_SOURCES = {
   // 'AA': 'github' as const,
   
   // Scripture API (online, requer chave)
-  'BLT': 'api' as const,
   'KJV': 'api' as const,
   'NIV': 'api' as const,
   'RVR60': 'api' as const,

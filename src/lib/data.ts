@@ -16,7 +16,6 @@ export const bibleVersions: BibleVersion[] = [
   { id: 'nvi-pt', languageCode: 'pt', name: 'Nova Versão Internacional', abbreviation: 'NVI' },
   { id: 'acf-pt', languageCode: 'pt', name: 'Almeida Corrigida e Fiel', abbreviation: 'ACF' },
   { id: 'aa-pt', languageCode: 'pt', name: 'Almeida Revisada Imprensa Bíblica', abbreviation: 'AA' },
-  { id: 'blt-pt', languageCode: 'pt', name: 'Bíblia Livre Para Todos', abbreviation: 'BLT' },
   
   // Versões em Inglês - Disponíveis via Scripture API
   { id: 'kjv-en', languageCode: 'en', name: 'King James Version', abbreviation: 'KJV' },
