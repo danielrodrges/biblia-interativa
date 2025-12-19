@@ -51,6 +51,16 @@ export default function PremiumBlocker({ feature, description }: PremiumBlockerP
           </div>
         </div>
 
+        {/* Valor Simbólico */}
+        <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 text-center">
+          <p className="text-sm font-medium text-green-900 dark:text-green-200">
+            💝 Investimento simbólico de R$ 9,90/mês
+          </p>
+          <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+            Para manter o app funcionando e melhorando sempre
+          </p>
+        </div>
+
         {/* Benefícios */}
         <div className="mb-6">
           <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
@@ -87,7 +97,7 @@ export default function PremiumBlocker({ feature, description }: PremiumBlockerP
 
         {/* Nota */}
         <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-4">
-          Cancele quando quiser. Sem compromisso.
+          Cancele quando quiser. Sem compromisso. 💚
         </p>
       </div>
     </div>

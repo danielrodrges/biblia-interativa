@@ -124,22 +124,28 @@ export default function PricingPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#FAF9F6] via-stone-50 to-stone-100">
       <div className="max-w-7xl mx-auto px-6 py-16">
         {/* Header */}
-        <div className="text-center mb-12">
-          <Link href="/welcome" className="inline-block mb-6 text-stone-500 hover:text-stone-800 transition-colors">
+        <div className="text-center mb-8 md:mb-12">
+          <Link href="/welcome" className="inline-block mb-4 md:mb-6 text-stone-500 hover:text-stone-800 transition-colors text-sm md:text-base">
             ← Voltar
           </Link>
-          <h1 className="text-5xl md:text-6xl font-serif font-bold text-stone-900 mb-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-stone-900 mb-3 md:mb-4 px-4">
             Escolha seu plano
           </h1>
-          <p className="text-xl text-stone-600 max-w-2xl mx-auto mb-8">
+          <p className="text-base sm:text-lg md:text-xl text-stone-600 max-w-2xl mx-auto mb-3 md:mb-4 px-4">
             Comece grátis e faça upgrade quando quiser. Sem surpresas.
           </p>
+          <div className="inline-flex items-center gap-2 bg-amber-50 border-2 border-amber-200 rounded-xl px-4 py-2 mb-6">
+            <span className="text-2xl">💝</span>
+            <p className="text-sm font-medium text-amber-900">
+              Valor simbólico para manter o app funcionando
+            </p>
+          </div>
 
           {/* Billing Toggle */}
-          <div className="inline-flex items-center gap-3 bg-white rounded-2xl p-1.5 shadow-lg border border-stone-200">
+          <div className="inline-flex items-center gap-2 md:gap-3 bg-white rounded-xl md:rounded-2xl p-1.5 shadow-lg border border-stone-200">
             <button
               onClick={() => setBillingCycle('monthly')}
-              className={`px-6 py-2.5 rounded-xl font-medium transition-all ${
+              className={`px-4 sm:px-6 py-2 md:py-2.5 rounded-lg md:rounded-xl font-medium text-sm md:text-base transition-all ${
                 billingCycle === 'monthly'
                   ? 'bg-stone-900 text-white shadow-md'
                   : 'text-stone-600 hover:text-stone-900'
@@ -149,7 +155,7 @@ export default function PricingPage() {
             </button>
             <button
               onClick={() => setBillingCycle('yearly')}
-              className={`px-6 py-2.5 rounded-xl font-medium transition-all relative ${
+              className={`px-4 sm:px-6 py-2 md:py-2.5 rounded-lg md:rounded-xl font-medium text-sm md:text-base transition-all relative ${
                 billingCycle === 'yearly'
                   ? 'bg-stone-900 text-white shadow-md'
                   : 'text-stone-600 hover:text-stone-900'
@@ -157,7 +163,7 @@ export default function PricingPage() {
             >
               Anual
               {savings && (
-                <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                <span className="absolute -top-2 -right-1 md:-right-2 bg-green-500 text-white text-xs px-1.5 md:px-2 py-0.5 rounded-full font-bold">
                   -17%
                 </span>
               )}
@@ -166,11 +172,11 @@ export default function PricingPage() {
         </div>
 
         {/* Plans Grid */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8 mb-12 md:mb-16 px-4 md:px-0">
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className={`relative bg-white rounded-[2rem] p-8 shadow-xl border-2 transition-all hover:scale-105 ${
+              className={`relative bg-white rounded-2xl md:rounded-[2rem] p-6 md:p-8 shadow-xl border-2 transition-all hover:scale-105 ${
                 plan.highlight
                   ? 'border-stone-900 shadow-2xl'
                   : 'border-stone-200 hover:border-stone-400'
@@ -182,22 +188,22 @@ export default function PricingPage() {
                 </div>
               )}
 
-              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 ${
+              <div className={`w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center mb-3 md:mb-4 ${
                 plan.highlight ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-700'
               }`}>
-                {plan.icon}
+                <div className="scale-75 md:scale-100">{plan.icon}</div>
               </div>
 
-              <h3 className="text-2xl font-bold text-stone-900 mb-2">{plan.name}</h3>
-              <p className="text-stone-500 mb-6">{plan.description}</p>
+              <h3 className="text-xl md:text-2xl font-bold text-stone-900 mb-1 md:mb-2">{plan.name}</h3>
+              <p className="text-sm md:text-base text-stone-500 mb-4 md:mb-6">{plan.description}</p>
 
-              <div className="mb-6">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-bold text-stone-900">
+              <div className="mb-4 md:mb-6">
+                <div className="flex items-baseline gap-1 md:gap-2">
+                  <span className="text-3xl sm:text-4xl md:text-5xl font-bold text-stone-900">
                     R$ {plan.price[billingCycle].toFixed(2).replace('.', ',')}
                   </span>
                   {plan.price[billingCycle] > 0 && (
-                    <span className="text-stone-500">
+                    <span className="text-sm md:text-base text-stone-500">
                       /{billingCycle === 'monthly' ? 'mês' : 'ano'}
                     </span>
                   )}
@@ -212,7 +218,7 @@ export default function PricingPage() {
               <button
                 onClick={() => handleSelectPlan(plan.id)}
                 disabled={loading === plan.id}
-                className={`w-full py-4 rounded-2xl font-bold text-lg mb-6 transition-all flex items-center justify-center gap-2 ${
+                className={`w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-bold text-sm md:text-base lg:text-lg mb-4 md:mb-6 transition-all flex items-center justify-center gap-2 ${
                   plan.highlight
                     ? 'bg-stone-900 text-white hover:bg-stone-800 shadow-lg disabled:opacity-50'
                     : 'bg-stone-100 text-stone-900 hover:bg-stone-200 disabled:opacity-50'
@@ -231,11 +237,11 @@ export default function PricingPage() {
                 )}
               </button>
 
-              <ul className="space-y-3">
+              <ul className="space-y-2 md:space-y-3">
                 {plan.features.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-stone-800 flex-shrink-0 mt-0.5" />
-                    <span className="text-stone-700">{feature}</span>
+                  <li key={index} className="flex items-start gap-2 md:gap-3">
+                    <Check className="w-4 h-4 md:w-5 md:h-5 text-stone-800 flex-shrink-0 mt-0.5" />
+                    <span className="text-xs sm:text-sm md:text-base text-stone-700">{feature}</span>
                   </li>
                 ))}
               </ul>
