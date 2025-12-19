@@ -50,7 +50,7 @@ export default function PerfilPage() {
   const currentStreak = calculateStreak();
 
   return (
-    <div className="h-full w-full overflow-y-auto scrollable-content bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-950 px-3 py-4 pb-24 sm:px-6 sm:py-6">
+    <div className="min-h-screen w-full bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-950 px-3 py-4 pb-24 sm:px-6 sm:py-6">
       <div className="max-w-lg mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">

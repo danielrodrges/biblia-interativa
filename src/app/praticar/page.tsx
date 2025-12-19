@@ -2,118 +2,256 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { BookOpen, Trophy, CheckCircle2, XCircle, ArrowRight, RotateCcw } from 'lucide-react';
-import { generateExerciseSet, ExerciseSet, ExerciseQuestion } from '@/lib/exercise-generator';
+import Link from 'next/link';
+import { BookOpen, Trophy, CheckCircle2, XCircle, RotateCcw, AlertCircle, Star } from 'lucide-react';
+import { generateVocabularyExercises, getReadingStats, type VocabularyExercise } from '@/lib/reading-history';
 import { useReadingPrefs } from '@/hooks/useReadingPrefs';
 
 export default function PraticarPage() {
   const router = useRouter();
-  const { prefs, hasValidPrefs, isLoaded } = useReadingPrefs();
+  const { prefs, isLoaded } = useReadingPrefs();
   
-  const [exerciseSet, setExerciseSet] = useState<ExerciseSet | null>(null);
+  const [exercises, setExercises] = useState<VocabularyExercise[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<string>('');
-  const [answered, setAnswered] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
-  const [score, setScore] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [showResult, setShowResult] = useState(false);
+  const [answers, setAnswers] = useState<{ [key: string]: boolean }>({});
+  const [completed, setCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  const hasValidPreferences = hasValidPrefs();
+  const [stats, setStats] = useState<ReturnType<typeof getReadingStats> | null>(null);
 
   useEffect(() => {
     if (!isLoaded) return;
     
-    if (!hasValidPreferences) {
-      router.push('/leitura/setup');
+    // Usa o idioma de áudio (ouvido) para gerar exercícios
+    const audioLanguage = prefs.speechLanguage;
+    
+    if (!audioLanguage || audioLanguage === 'pt-BR') {
+      setLoading(false);
       return;
     }
-
-    loadExercises();
-  }, [isLoaded, hasValidPreferences, router]);
-
-  const loadExercises = async () => {
-    setLoading(true);
-    const book = 'genesis';
-    const chapter = 1;
     
-    const exercises = await generateExerciseSet(book, chapter);
-    if (exercises) {
-      setExerciseSet(exercises);
+    const validLanguages = ['en-US', 'es-ES', 'it-IT', 'fr-FR'] as const;
+    if (!validLanguages.includes(audioLanguage as any)) {
+      setLoading(false);
+      return;
     }
+    
+    const generated = generateVocabularyExercises(
+      audioLanguage as 'en-US' | 'es-ES' | 'it-IT' | 'fr-FR',
+      15,
+      true // preferir idioma de áudio
+    );
+    
+    setExercises(generated);
+    setStats(getReadingStats());
     setLoading(false);
-  };
+  }, [prefs.speechLanguage, isLoaded]);
 
-  const handleAnswerMultipleChoice = (answer: string) => {
-    if (answered) return;
+  const currentQ = exercises[currentQuestion];
+
+  const handleAnswerSelect = (answer: string) => {
+    if (showResult) return;
     setSelectedAnswer(answer);
   };
 
-  const handleSubmitAnswer = () => {
-    if (!exerciseSet || answered) return;
-    
-    const question = exerciseSet.questions[currentQuestion];
-    const correct = selectedAnswer === question.correctAnswer;
+  const handleCheckAnswer = () => {
+    if (!selectedAnswer || !currentQ) return;
 
-    setIsCorrect(correct);
-    setAnswered(true);
-    if (correct) {
-      setScore(score + 10);
-    }
+    const isCorrect = selectedAnswer === currentQ.correctAnswer;
+    setAnswers({
+      ...answers,
+      [currentQ.id]: isCorrect
+    });
+    setShowResult(true);
   };
 
   const handleNextQuestion = () => {
-    if (!exerciseSet) return;
-    
-    if (currentQuestion < exerciseSet.questions.length - 1) {
+    if (currentQuestion < exercises.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
-      setSelectedAnswer('');
-      setAnswered(false);
-      setIsCorrect(false);
+      setSelectedAnswer(null);
+      setShowResult(false);
+    } else {
+      setCompleted(true);
     }
   };
 
   const handleRestart = () => {
     setCurrentQuestion(0);
-    setSelectedAnswer('');
-    setAnswered(false);
-    setIsCorrect(false);
-    setScore(0);
-    loadExercises();
+    setSelectedAnswer(null);
+    setShowResult(false);
+    setAnswers({});
+    setCompleted(false);
+    
+    const audioLanguage = prefs.speechLanguage;
+    if (audioLanguage && audioLanguage !== 'pt-BR') {
+      const generated = generateVocabularyExercises(
+        audioLanguage as 'en-US' | 'es-ES' | 'it-IT' | 'fr-FR',
+        15,
+        true
+      );
+      setExercises(generated);
+    }
   };
 
-  if (loading || !exerciseSet) {
+  const calculateScore = () => {
+    const correct = Object.values(answers).filter(Boolean).length;
+    const total = exercises.length;
+    return Math.round((correct / total) * 100);
+  };
+
+  if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center px-6 pb-24">
         <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-gray-600 dark:text-gray-400">Gerando exercícios...</p>
+        <p className="mt-4 text-gray-600 dark:text-gray-400">Carregando exercícios...</p>
       </div>
     );
   }
 
-  const question = exerciseSet.questions[currentQuestion];
-  const progress = ((currentQuestion + 1) / exerciseSet.questions.length) * 100;
+  if (exercises.length === 0) {
+    return (
+      <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 px-4 sm:px-6 py-12 pb-24">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 sm:p-8 text-center">
+            <AlertCircle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Nenhum exercício disponível
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6">
+              Para praticar, você precisa ler alguns capítulos da Bíblia primeiro com tradução ativa.
+            </p>
+            
+            {stats && stats.totalReadings > 0 && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 mb-6">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  <strong>Suas estatísticas:</strong>
+                  <br />
+                  • {stats.totalChapters} capítulos lidos
+                  <br />
+                  • {stats.totalVerses} versículos
+                  <br />
+                  • {stats.totalReadings} sessões de leitura
+                </p>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                  Continue lendo com tradução para gerar mais exercícios!
+                </p>
+              </div>
+            )}
+            
+            <div className="space-y-3">
+              <Link
+                href="/leitura"
+                className="block w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 sm:py-4 rounded-xl font-semibold hover:shadow-lg transition-shadow"
+              >
+                <BookOpen className="w-5 h-5 inline mr-2" />
+                Começar a Ler
+              </Link>
+              <Link
+                href="/inicio"
+                className="block w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-3 sm:py-4 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Voltar ao Início
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (completed) {
+    const score = calculateScore();
+    const stars = score >= 90 ? 3 : score >= 70 ? 2 : score >= 50 ? 1 : 0;
+    const languageNames: { [key: string]: string } = {
+      'en-US': 'Inglês',
+      'es-ES': 'Espanhol',
+      'it-IT': 'Italiano',
+      'fr-FR': 'Francês',
+    };
+    const practiceLang = prefs.speechLanguage; // idioma que foi ouvido
+
+    return (
+      <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 pb-24">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 sm:p-8 text-center">
+            <Trophy className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              Parabéns!
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Você completou a prática de {languageNames[practiceLang as string] || 'vocabulário'}
+            </p>
+
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl p-6 mb-6">
+              <div className="text-5xl font-bold mb-2">{score}%</div>
+              <div className="text-blue-100">de acertos</div>
+              <div className="flex items-center justify-center gap-1 mt-4">
+                {[1, 2, 3].map((star) => (
+                  <Star
+                    key={star}
+                    className={`w-8 h-8 ${
+                      star <= stars
+                        ? 'fill-yellow-300 text-yellow-300'
+                        : 'text-blue-300'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={handleRestart}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-shadow flex items-center justify-center gap-2"
+              >
+                <RotateCcw className="w-5 h-5" />
+                Praticar Novamente
+              </button>
+              <Link
+                href="/leitura"
+                className="block w-full bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 py-4 rounded-xl font-semibold hover:bg-blue-200 dark:hover:bg-blue-900/30 transition-colors"
+              >
+                Continuar Lendo
+              </Link>
+              <Link
+                href="/inicio"
+                className="block w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-4 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Voltar ao Início
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const progress = ((currentQuestion + 1) / exercises.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pb-20">
+    <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pb-24">
       {/* Header com progresso */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-3">
+      <div className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
             <div className="flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              <h1 className="text-lg font-bold text-gray-900 dark:text-white">
-                {exerciseSet.title}
+              <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
+              <h1 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
+                Praticar Vocabulário
               </h1>
             </div>
-            <div className="flex items-center gap-2 bg-yellow-100 dark:bg-yellow-900/30 px-3 py-1 rounded-full">
-              <Trophy className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-              <span className="font-bold text-yellow-700 dark:text-yellow-400">{score} pts</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 bg-yellow-100 dark:bg-yellow-900/30 px-2 sm:px-3 py-1 rounded-full">
+              <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-600 dark:text-yellow-400" />
+              <span className="text-sm sm:text-base font-bold text-yellow-700 dark:text-yellow-400">
+                {Object.values(answers).filter(Boolean).length}/{exercises.length}
+              </span>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              {currentQuestion + 1}/{exerciseSet.questions.length}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+              {currentQuestion + 1}/{exercises.length}
             </span>
             <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
               <div 
@@ -126,119 +264,112 @@ export default function PraticarPage() {
       </div>
 
       {/* Conteúdo do exercício */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-[#FAF9F6] dark:bg-gray-800 rounded-2xl shadow-xl p-6 md:p-8">
+      <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
           <div className="mb-6">
-            <p className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              {question.question}
+            <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+              O que significa em português?
+            </span>
+          </div>
+          
+          <div className="text-center mb-8">
+            <h2 className="text-4xl sm:text-5xl font-bold text-blue-600 dark:text-blue-400 mb-3">
+              {currentQ.word}
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {currentQ.reference}
             </p>
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border-l-4 border-blue-500">
-              <p className="text-base text-gray-800 dark:text-gray-200 leading-relaxed">
-                "{question.verse.text}"
-              </p>
-              <p className="text-sm text-blue-600 dark:text-blue-400 mt-2">
-                {question.verse.reference}
-              </p>
-            </div>
           </div>
 
-          {question.type === 'multiple-choice' && question.options && (
-            <div className="space-y-3 mb-6">
-              {question.options.map((option, index) => {
-                const isSelected = selectedAnswer === option;
-                const isCorrectOption = option === question.correctAnswer;
-                
-                let buttonClass = 'w-full p-4 rounded-xl border-2 text-left transition-all transform hover:scale-[1.02] ';
-                
-                if (!answered) {
-                  buttonClass += isSelected
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-blue-300';
-                } else if (isCorrectOption) {
-                  buttonClass += 'border-green-500 bg-green-50 dark:bg-green-900/20';
-                } else if (isSelected) {
-                  buttonClass += 'border-red-500 bg-red-50 dark:bg-red-900/20';
-                } else {
-                  buttonClass += 'border-gray-200 dark:border-gray-700 opacity-50';
-                }
+          <div className="space-y-3 mb-6">
+            {currentQ.options?.map((option) => {
+              const isSelected = selectedAnswer === option;
+              const isCorrect = option === currentQ.correctAnswer;
+              const showCorrect = showResult && isCorrect;
+              const showWrong = showResult && isSelected && !isCorrect;
 
-                return (
-                  <button
-                    key={index}
-                    onClick={() => handleAnswerMultipleChoice(option)}
-                    disabled={answered}
-                    className={buttonClass}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{option}</span>
-                      {answered && isCorrectOption && (
-                        <CheckCircle2 className="w-5 h-5 text-green-600" />
-                      )}
-                      {answered && isSelected && !isCorrect && (
-                        <XCircle className="w-5 h-5 text-red-600" />
+              return (
+                <button
+                  key={option}
+                  onClick={() => handleAnswerSelect(option)}
+                  disabled={showResult}
+                  className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                    showCorrect
+                      ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                      : showWrong
+                      ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                      : isSelected
+                      ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                        showCorrect
+                          ? 'border-green-500 bg-green-500'
+                          : showWrong
+                          ? 'border-red-500 bg-red-500'
+                          : isSelected
+                          ? 'border-blue-600 bg-blue-600'
+                          : 'border-gray-300 dark:border-gray-600'
+                      }`}
+                    >
+                      {showCorrect && <CheckCircle2 className="w-4 h-4 text-white" />}
+                      {showWrong && <XCircle className="w-4 h-4 text-white" />}
+                      {isSelected && !showResult && (
+                        <div className="w-2 h-2 bg-white rounded-full" />
                       )}
                     </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {answered && (
-            <div className={`rounded-xl p-4 mb-6 ${
-              isCorrect 
-                ? 'bg-green-50 dark:bg-green-900/20 border border-green-200' 
-                : 'bg-red-50 dark:bg-red-900/20 border border-red-200'
-            }`}>
-              <div className="flex items-start gap-3">
-                {isCorrect ? (
-                  <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0" />
-                ) : (
-                  <XCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
-                )}
-                <div>
-                  <p className={`font-semibold ${
-                    isCorrect ? 'text-green-900' : 'text-red-900'
-                  }`}>
-                    {isCorrect ? '✨ Correto! Muito bem!' : '❌ Incorreto. Tente novamente!'}
-                  </p>
-                  {question.explanation && (
-                    <p className="text-sm mt-1">
-                      {question.explanation}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="flex gap-3">
-            <button
-              onClick={handleRestart}
-              className="px-6 py-3 rounded-xl border-2 border-gray-300 hover:bg-gray-50 transition-all flex items-center gap-2"
-            >
-              <RotateCcw className="w-4 h-4" />
-              Reiniciar
-            </button>
-            
-            {!answered ? (
-              <button
-                onClick={handleSubmitAnswer}
-                disabled={!selectedAnswer}
-                className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 transition-all"
-              >
-                Verificar Resposta
-              </button>
-            ) : (
-              <button
-                onClick={handleNextQuestion}
-                className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold hover:from-green-700 transition-all flex items-center justify-center gap-2"
-              >
-                Próxima Questão
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            )}
+                    <span className="font-medium text-gray-900 dark:text-white">{option}</span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
+
+          {/* Explicação */}
+          {showResult && (
+            <div className={`rounded-xl p-4 mb-6 ${
+              selectedAnswer === currentQ.correctAnswer
+                ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+                : 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
+            }`}>
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                {selectedAnswer === currentQ.correctAnswer ? (
+                  <>
+                    <strong className="text-green-700 dark:text-green-400">✓ Correto!</strong> "{currentQ.word}" significa "{currentQ.portugueseWord}" em português.
+                  </>
+                ) : (
+                  <>
+                    <strong className="text-blue-700 dark:text-blue-400">Resposta correta:</strong> "{currentQ.word}" significa "{currentQ.portugueseWord}" em português.
+                  </>
+                )}
+              </p>
+            </div>
+          )}
+
+          {/* Botões */}
+          {!showResult ? (
+            <button
+              onClick={handleCheckAnswer}
+              disabled={!selectedAnswer}
+              className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
+                selectedAnswer
+                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:shadow-xl'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              Verificar Resposta
+            </button>
+          ) : (
+            <button
+              onClick={handleNextQuestion}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-shadow"
+            >
+              {currentQuestion < exercises.length - 1 ? 'Próxima Questão' : 'Ver Resultado'}
+            </button>
+          )}
         </div>
       </div>
     </div>

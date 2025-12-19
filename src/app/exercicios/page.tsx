@@ -21,35 +21,36 @@ function ExerciciosContent() {
   const [stats, setStats] = useState<ReturnType<typeof getReadingStats> | null>(null);
 
   useEffect(() => {
-    // Carrega exercícios baseados no idioma de prática
-    const practiceLanguage = prefs.practiceLanguage || prefs.textLanguage;
+    // Carrega exercícios baseados no idioma de áudio (ouvido)
+    const audioLanguage = prefs.speechLanguage;
     
-    if (!practiceLanguage || practiceLanguage === 'pt-BR') {
+    if (!audioLanguage || audioLanguage === 'pt-BR') {
       setLoading(false);
       return;
     }
     
     const validLanguages = ['en-US', 'es-ES', 'it-IT', 'fr-FR'] as const;
-    if (!validLanguages.includes(practiceLanguage as any)) {
+    if (!validLanguages.includes(audioLanguage as any)) {
       setLoading(false);
       return;
     }
     
     const generated = generateVocabularyExercises(
-      practiceLanguage as 'en-US' | 'es-ES' | 'it-IT' | 'fr-FR',
-      10
+      audioLanguage as 'en-US' | 'es-ES' | 'it-IT' | 'fr-FR',
+      10,
+      true // preferir idioma de áudio
     );
     
     setExercises(generated);
     setStats(getReadingStats());
     setLoading(false);
-  }, [prefs.practiceLanguage, prefs.textLanguage]);
+  }, [prefs.speechLanguage]);
 
   const currentQ = exercises[currentQuestion];
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-6">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center px-6 pb-24">
         <div className="animate-pulse text-gray-600">Carregando exercícios...</div>
       </div>
     );
@@ -57,7 +58,7 @@ function ExerciciosContent() {
 
   if (exercises.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white px-6 py-12">
+      <div className="min-h-screen w-full bg-gradient-to-b from-blue-50 to-white px-4 sm:px-6 py-12 pb-24">
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
             <AlertCircle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
@@ -151,7 +152,7 @@ function ExerciciosContent() {
     const practiceLang = prefs.practiceLanguage || prefs.textLanguage;
 
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white pb-20">
+      <div className="min-h-screen w-full bg-gradient-to-b from-blue-50 to-white pb-24">
         <div className="px-6 py-8 safe-area-top">
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
             <Trophy className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
@@ -217,17 +218,17 @@ function ExerciciosContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white pb-20">
+    <div className="min-h-screen w-full bg-gradient-to-b from-blue-50 to-white pb-24">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-6 safe-area-top">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 sm:px-6 py-4 sm:py-6 safe-area-top sticky top-0 z-10">
         <Link
           href="/inicio"
-          className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-4"
+          className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-3 sm:mb-4"
         >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="text-sm">Voltar</span>
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="text-xs sm:text-sm">Voltar</span>
         </Link>
-        <h1 className="text-xl font-bold mb-2">Exercícios de Vocabulário</h1>
+        <h1 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2">Exercícios de Vocabulário</h1>
         <p className="text-blue-100 text-sm">Baseado nas suas leituras</p>
       </div>
 

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter, Crimson_Pro } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/custom/bottom-nav";
+import { NavigationProvider } from "@/contexts/NavigationContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -35,20 +36,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className="h-full">
+    <html lang="pt-BR">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body className={`${inter.variable} ${crimsonPro.variable} font-inter antialiased bg-[#FAF9F6] dark:bg-gray-950 h-full overflow-hidden`}>
-        <div className="h-full flex flex-col">
-          <div className="flex-1 overflow-hidden">
-            {children}
-          </div>
+      <body className={`${inter.variable} ${crimsonPro.variable} font-inter antialiased bg-[#FAF9F6] dark:bg-gray-950`}>
+        <NavigationProvider>
+          {children}
           <BottomNav />
-        </div>
+        </NavigationProvider>
       </body>
     </html>
   );

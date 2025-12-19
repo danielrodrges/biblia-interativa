@@ -7,6 +7,7 @@ export interface ReadingEntry {
   chapter: number;
   verses: number[];
   timestamp: number;
+  audioLanguage?: string; // idioma que foi ouvido em voz alta
   portugueseWords: string[];
   translatedWords: { [language: string]: string[] };
 }
@@ -96,7 +97,8 @@ function extractKeywords(text: string): string[] {
  */
 export function generateVocabularyExercises(
   language: 'en-US' | 'es-ES' | 'it-IT' | 'fr-FR',
-  count: number = 10
+  count: number = 10,
+  preferAudioLanguage: boolean = true // prioriza idioma de áudio se true
 ): VocabularyExercise[] {
   const history = getReadingHistory();
   if (history.length === 0) {

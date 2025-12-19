@@ -45,7 +45,7 @@ export default function SetupPage() {
   const versions = BIBLE_VERSIONS['pt-BR'];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-amber-50 dark:from-gray-900 dark:to-gray-800 px-4 sm:px-6 py-6 sm:py-12">
+    <div className="min-h-screen w-full bg-gradient-to-b from-blue-50 to-amber-50 dark:from-gray-900 dark:to-gray-800 px-4 sm:px-6 py-6 sm:py-12 pb-24">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">

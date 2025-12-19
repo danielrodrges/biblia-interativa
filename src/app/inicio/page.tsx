@@ -3,13 +3,15 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BookOpen, Sparkles, TrendingUp, ChevronRight, Database } from 'lucide-react';
-import { getPreferences } from '@/lib/preferences';
+import { getPreferences, savePreferences } from '@/lib/preferences';
 import { verseOfTheDay } from '@/lib/data';
 import { UserPreferences } from '@/lib/types';
+import { getRandomSuggestions, type ReadingSuggestion } from '@/lib/reading-suggestions';
 
 export default function InicioPage() {
   const router = useRouter();
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
+  const [suggestions, setSuggestions] = useState<ReadingSuggestion[]>([]);
 
   useEffect(() => {
     const prefs = getPreferences();
@@ -18,7 +20,24 @@ export default function InicioPage() {
       return;
     }
     setPreferences(prefs);
+    setSuggestions(getRandomSuggestions(4));
   }, [router]);
+
+  const handleSuggestionClick = (suggestion: ReadingSuggestion) => {
+    // Salva a navegação nas preferências
+    const prefs = getPreferences();
+    savePreferences({
+      ...prefs,
+      lastReading: {
+        book: suggestion.book,
+        chapter: suggestion.chapter,
+        timestamp: Date.now()
+      }
+    });
+    
+    // Navega para a página de leitura com query params
+    router.push(`/leitura?book=${suggestion.bookCode}&chapter=${suggestion.chapter}`);
+  };
 
   if (!preferences) {
     return (
@@ -29,8 +48,8 @@ export default function InicioPage() {
   }
 
   return (
-    <div className="h-full w-full overflow-y-auto scrollable-content bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-950 px-4 py-6 md:px-6">
-      <div className="max-w-lg mx-auto pb-6">
+    <div className="min-h-screen w-full bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-950 px-4 py-6 md:px-6">
+      <div className="max-w-lg mx-auto pb-24">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
@@ -94,6 +113,43 @@ export default function InicioPage() {
             <ChevronRight className="w-6 h-6 text-gray-400 group-hover:text-blue-500 transition-colors" />
           </button>
         )}
+
+        {/* Sugestões de Leitura por Emoção */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="w-5 h-5 text-purple-600" />
+            <h2 className="text-xl font-bold text-gray-800">
+              Como você está se sentindo?
+            </h2>
+          </div>
+          <p className="text-gray-600 text-sm mb-4">
+            Encontre palavras de conforto e sabedoria para o que você precisa hoje
+          </p>
+          
+          <div className="grid grid-cols-2 gap-3">
+            {suggestions.map((suggestion) => (
+              <button
+                key={suggestion.id}
+                onClick={() => handleSuggestionClick(suggestion)}
+                className={`${suggestion.gradient} dark:bg-gray-800 rounded-2xl p-4 shadow-md hover:shadow-lg transition-all transform hover:scale-105 text-left`}
+              >
+                <div className="text-3xl mb-2">{suggestion.icon}</div>
+                <div className="font-bold text-gray-800 dark:text-white mb-1 text-sm">
+                  {suggestion.title}
+                </div>
+                <div className="text-xs text-gray-600 dark:text-gray-300 mb-2 line-clamp-2">
+                  {suggestion.description}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-gray-700 dark:text-gray-200">
+                    {suggestion.book} {suggestion.chapter}
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-gray-500" />
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-4 mb-6">

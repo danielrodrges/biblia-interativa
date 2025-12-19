@@ -1,25 +1,29 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useMemo, useRef, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSwipeable } from 'react-swipeable';
 import ReaderHeader from '@/components/custom/reader/ReaderHeader';
 import ReaderContent from '@/components/custom/reader/ReaderContent';
 import SpeechControls from '@/components/custom/reader/SpeechControls';
 import { SubtitleDisplay } from '@/components/custom/reader/SubtitleDisplay';
+import BookChapterSelector from '@/components/custom/reader/BookChapterSelector';
 import { useReadingPrefs } from '@/hooks/useReadingPrefs';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { useSwipeIndicator } from '@/hooks/useSwipeIndicator';
 import { useReadingTime } from '@/hooks/useReadingTime';
+import { useNavigation } from '@/contexts/NavigationContext';
 import { loadBibleChapter, BibleChapter } from '@/lib/bible-loader';
 import { getNextChapter, getPreviousChapter } from '@/lib/bible-navigation';
 import { translateBatch } from '@/lib/translate';
 import { saveReadingEntry } from '@/lib/reading-history';
 import { X, Type, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 
-export default function ReaderPage() {
+function ReaderPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { prefs, savePrefs, hasValidPrefs, isLoaded } = useReadingPrefs();
+  const { setShowBottomNav } = useNavigation();
   
   const speechOptions = useMemo(() => ({
     lang: prefs.speechLanguage || 'pt-BR',
@@ -41,6 +45,7 @@ export default function ReaderPage() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [isLoadingChapter, setIsLoadingChapter] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [showControls, setShowControls] = useState(true); // controla visibilidade dos menus
 
   // Verificar se tem preferências válidas
   const hasValidPreferences = useMemo(() => hasValidPrefs(), [hasValidPrefs]);
@@ -50,6 +55,24 @@ export default function ReaderPage() {
       router.push('/leitura/setup');
     }
   }, [isLoaded, hasValidPreferences, router]);
+
+  // Carregar livro/capítulo dos query params se existirem
+  useEffect(() => {
+    if (!isLoaded) return;
+    
+    const bookParam = searchParams?.get('book');
+    const chapterParam = searchParams?.get('chapter');
+    
+    if (bookParam) {
+      setCurrentBook(bookParam);
+    }
+    if (chapterParam) {
+      const chapter = parseInt(chapterParam, 10);
+      if (!isNaN(chapter)) {
+        setCurrentChapter(chapter);
+      }
+    }
+  }, [searchParams, isLoaded]);
 
   // Carregar capítulo quando preferências ou navegação mudam
   useEffect(() => {
@@ -249,6 +272,7 @@ export default function ReaderPage() {
             chapter: currentChapter,
             verses: verseNumbers,
             timestamp: Date.now(),
+            audioLanguage: prefs.speechLanguage, // salva o idioma que foi ouvido
             portugueseWords: allPortugueseWords,
             translatedWords: {
               en: newTranslations.en.flatMap(extractKeywords),
@@ -345,80 +369,144 @@ export default function ReaderPage() {
     return getNextChapter(currentBook, currentChapter) !== null;
   };
 
-  // Preparar textos para leitura
+  // Preparar textos para leitura (VOZ - idioma que será FALADO)
   const verseTexts = useMemo(() => {
     if (!chapterData) return [];
     
-    // Se idioma da voz é inglês e temos textos traduzidos, usar traduzidos
-    if (prefs.speechLanguage === 'en-US' && translatedTexts.en.length > 0) {
-      return translatedTexts.en;
+    // Idioma da VOZ determina qual texto será FALADO
+    // O idioma do TEXTO (tela) é independente e determinado por prefs.textLanguage
+    
+    // Se idioma da voz é inglês, FALAR em inglês
+    if (prefs.speechLanguage === 'en-US') {
+      if (translatedTexts.en.length > 0) {
+        return translatedTexts.en;
+      }
+      console.warn('⚠️ Tradução em inglês ainda não carregada');
+      return chapterData.verses.map(v => v.text); // Fallback temporário
     }
     
-    // Se idioma da voz é espanhol e temos textos traduzidos, usar traduzidos
-    if (prefs.speechLanguage === 'es-ES' && translatedTexts.es.length > 0) {
-      return translatedTexts.es;
+    // Se idioma da voz é espanhol, FALAR em espanhol
+    if (prefs.speechLanguage === 'es-ES') {
+      if (translatedTexts.es.length > 0) {
+        return translatedTexts.es;
+      }
+      console.warn('⚠️ Tradução em espanhol ainda não carregada');
+      return chapterData.verses.map(v => v.text); // Fallback temporário
     }
     
-    // Se idioma da voz é italiano e temos textos traduzidos, usar traduzidos
-    if (prefs.speechLanguage === 'it-IT' && translatedTexts.it.length > 0) {
-      return translatedTexts.it;
+    // Se idioma da voz é italiano, FALAR em italiano
+    if (prefs.speechLanguage === 'it-IT') {
+      if (translatedTexts.it.length > 0) {
+        return translatedTexts.it;
+      }
+      console.warn('⚠️ Tradução em italiano ainda não carregada');
+      return chapterData.verses.map(v => v.text); // Fallback temporário
     }
     
-    // Se idioma da voz é francês e temos textos traduzidos, usar traduzidos
-    if (prefs.speechLanguage === 'fr-FR' && translatedTexts.fr.length > 0) {
-      return translatedTexts.fr;
+    // Se idioma da voz é francês, FALAR em francês
+    if (prefs.speechLanguage === 'fr-FR') {
+      if (translatedTexts.fr.length > 0) {
+        return translatedTexts.fr;
+      }
+      console.warn('⚠️ Tradução em francês ainda não carregada');
+      return chapterData.verses.map(v => v.text); // Fallback temporário
     }
     
-    // Senão, usar a versão em português
+    // Senão, FALAR em português (versão original da Bíblia)
     return chapterData.verses.map(v => v.text);
   }, [chapterData, translatedTexts, prefs.speechLanguage]);
 
-  // Preparar versos para exibição (com texto correto para sincronização)
+  // Preparar versos para exibição na TELA (idioma do TEXTO - visual)
   const displayVerses = useMemo(() => {
     if (!chapterData) return [];
     
-    // Se o idioma do TEXTO for inglês e temos traduções, usar texto traduzido
-    if (prefs.textLanguage === 'en-US' && translatedTexts.en.length > 0) {
-      return chapterData.verses.map((v, i) => ({
-        number: v.number,
-        text: translatedTexts.en[i] || v.text
-      }));
+    // O idioma do TEXTO determina o que aparece na TELA
+    // Isso é INDEPENDENTE do idioma da voz (speechLanguage)
+    
+    // Se o idioma do TEXTO for inglês, MOSTRAR em inglês
+    if (prefs.textLanguage === 'en-US') {
+      if (translatedTexts.en.length > 0) {
+        return chapterData.verses.map((v, i) => ({
+          number: v.number,
+          text: translatedTexts.en[i] || v.text
+        }));
+      }
+      console.warn('⚠️ Tradução em inglês para exibição ainda não carregada');
     }
     
-    // Se o idioma do TEXTO for espanhol e temos traduções, usar texto traduzido
-    if (prefs.textLanguage === 'es-ES' && translatedTexts.es.length > 0) {
-      return chapterData.verses.map((v, i) => ({
-        number: v.number,
-        text: translatedTexts.es[i] || v.text
-      }));
+    // Se o idioma do TEXTO for espanhol, MOSTRAR em espanhol
+    if (prefs.textLanguage === 'es-ES') {
+      if (translatedTexts.es.length > 0) {
+        return chapterData.verses.map((v, i) => ({
+          number: v.number,
+          text: translatedTexts.es[i] || v.text
+        }));
+      }
+      console.warn('⚠️ Tradução em espanhol para exibição ainda não carregada');
     }
     
-    // Se o idioma do TEXTO for italiano e temos traduções, usar texto traduzido
-    if (prefs.textLanguage === 'it-IT' && translatedTexts.it.length > 0) {
-      return chapterData.verses.map((v, i) => ({
-        number: v.number,
-        text: translatedTexts.it[i] || v.text
-      }));
+    // Se o idioma do TEXTO for italiano, MOSTRAR em italiano
+    if (prefs.textLanguage === 'it-IT') {
+      if (translatedTexts.it.length > 0) {
+        return chapterData.verses.map((v, i) => ({
+          number: v.number,
+          text: translatedTexts.it[i] || v.text
+        }));
+      }
+      console.warn('⚠️ Tradução em italiano para exibição ainda não carregada');
     }
     
-    // Se o idioma do TEXTO for francês e temos traduções, usar texto traduzido
-    if (prefs.textLanguage === 'fr-FR' && translatedTexts.fr.length > 0) {
-      return chapterData.verses.map((v, i) => ({
-        number: v.number,
-        text: translatedTexts.fr[i] || v.text
-      }));
+    // Se o idioma do TEXTO for francês, MOSTRAR em francês
+    if (prefs.textLanguage === 'fr-FR') {
+      if (translatedTexts.fr.length > 0) {
+        return chapterData.verses.map((v, i) => ({
+          number: v.number,
+          text: translatedTexts.fr[i] || v.text
+        }));
+      }
+      console.warn('⚠️ Tradução em francês para exibição ainda não carregada');
     }
     
-    // Senão, usar texto original em português
+    // Senão, MOSTRAR em português (texto original da Bíblia)
     return chapterData.verses;
   }, [chapterData, translatedTexts, prefs.textLanguage]);
 
   const handleStartReading = () => {
     if (verseTexts.length > 0) {
-      console.log('📖 Iniciando leitura com textos:', verseTexts.slice(0, 3)); // Mostra os 3 primeiros
+      console.log('🎯 CONFIGURAÇÃO DE LEITURA:');
+      console.log('  📖 Texto na TELA:', prefs.textLanguage);
+      console.log('  🗣️ Voz FALADA:', prefs.speechLanguage);
+      console.log('  📚 Primeiros versículos (VOZ):', verseTexts.slice(0, 2));
+      console.log('  📱 Primeiros versículos (TELA):', displayVerses.slice(0, 2).map(v => v.text));
       speak(verseTexts, 0);
+      setShowControls(false); // esconde menus ao começar a ler
+      setShowBottomNav(false); // esconde bottom nav ao começar a ler
     }
   };
+
+  // Alterna visibilidade dos controles ao clicar no conteúdo
+  const handleContentClick = () => {
+    if (speechState === 'speaking') {
+      const newShowState = !showControls;
+      setShowControls(newShowState);
+      setShowBottomNav(newShowState);
+    }
+  };
+
+  // Mostra controles quando pausar ou parar
+  useEffect(() => {
+    if (speechState === 'paused' || speechState === 'idle') {
+      setShowControls(true);
+      setShowBottomNav(true);
+    }
+  }, [speechState, setShowBottomNav]);
+
+  // Garante que o bottom nav apareça ao desmontar o componente
+  useEffect(() => {
+    return () => {
+      setShowBottomNav(true);
+    };
+  }, [setShowBottomNav]);
 
   // Configurar gestos de swipe
   const swipeHandlers = useSwipeable({
@@ -452,13 +540,19 @@ export default function ReaderPage() {
   }
 
   return (
-    <div className="h-[100dvh] bg-[#FAF9F6] dark:bg-gray-950 flex flex-col" {...swipeHandlers}>
-      <ReaderHeader
-        book={chapterData?.bookName || currentBook}
-        chapter={currentChapter}
-        onSettingsClick={handleOpenSettings}
-        onNavigate={handleNavigateToChapter}
-      />
+    <div className="h-[100dvh] bg-[#FAF9F6] dark:bg-gray-950 flex flex-col relative overflow-hidden" {...swipeHandlers}>
+      {/* Header flutuante */}
+      <div className={`absolute top-0 left-0 right-0 z-50 transition-all duration-300 pointer-events-none ${
+        showControls ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
+      }`}>
+        <div className="bg-gradient-to-b from-[#FAF9F6] via-[#FAF9F6]/95 to-[#FAF9F6]/0 dark:from-gray-950 dark:via-gray-950/95 dark:to-gray-950/0 pb-8 pointer-events-auto">
+          <ReaderHeader
+            book={chapterData?.bookName || currentBook}
+            chapter={currentChapter}
+            onSettingsClick={handleOpenSettings}
+          />
+        </div>
+      </div>
 
       {isLoadingChapter || isTranslating ? (
         <div className="flex-1 flex items-center justify-center">
@@ -506,7 +600,14 @@ export default function ReaderPage() {
         </div>
       ) : chapterData ? (
         <>
-          <div className="flex-1 overflow-y-auto overflow-x-hidden scrollable-content">
+          <div 
+            className="absolute inset-0 overflow-y-auto overflow-x-hidden scrollable-content"
+            onClick={handleContentClick}
+            style={{
+              paddingTop: showControls ? '80px' : '20px',
+              paddingBottom: showControls ? '140px' : '20px',
+            }}
+          >
             <ReaderContent
             verses={displayVerses}
             fontSize={prefs.readerFontSize}
@@ -532,62 +633,42 @@ export default function ReaderPage() {
         </div>
       )}
 
-      {/* Controles de Voz */}
+      {/* Controles de Voz flutuantes */}
       {chapterData && (
-        <div className="flex-shrink-0">
-          <SpeechControls
-            state={speechState}
-            onPlay={handleStartReading}
-            onPause={pause}
-            onResume={resume}
-            onStop={stop}
-            isSupported={isSupported}
-          />
+        <div className={`absolute bottom-0 left-0 right-0 z-40 transition-all duration-300 pointer-events-none mb-16 ${
+          showControls ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
+        }`}>
+          <div className="bg-gradient-to-t from-[#FAF9F6] via-[#FAF9F6]/95 to-[#FAF9F6]/0 dark:from-gray-950 dark:via-gray-950/95 dark:to-gray-950/0 pt-8 pointer-events-auto">
+            <SpeechControls
+              state={speechState}
+              onPlay={handleStartReading}
+              onPause={pause}
+              onResume={resume}
+              onStop={stop}
+              isSupported={isSupported}
+            />
+          </div>
         </div>
       )}
 
       {/* Legendas em Tempo Real */}
       {chapterData && prefs.subtitleEnabled && speechState === 'speaking' && currentIndex >= 0 && (
-        <SubtitleDisplay
-          text={verseTexts[currentIndex]}
-          fontSize={prefs.subtitleFontSize || 'M'}
-        />
-      )}
-
-      {/* Navegação de Capítulos - acima da barra inferior */}
-      <div className="flex-shrink-0 bg-[#FAF9F6] dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-sm mb-14">
-        <div className="max-w-[720px] mx-auto px-4 py-2 flex items-center justify-center gap-3">
-          <button
-            onClick={handlePreviousChapter}
-            disabled={!canGoPrevious()}
-            className={`flex-1 max-w-[140px] px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
-              canGoPrevious()
-                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg active:scale-95'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            ← Anterior
-          </button>
-          <button
-            onClick={handleNextChapter}
-            disabled={!canGoNext()}
-            className={`flex-1 max-w-[140px] px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
-              canGoNext()
-                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg active:scale-95'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            Próximo →
-          </button>
+        <div className={`absolute left-0 right-0 z-30 transition-all duration-300 ${
+          showControls ? 'bottom-32' : 'bottom-4'
+        }`}>
+          <SubtitleDisplay
+            text={verseTexts[currentIndex]}
+            fontSize={prefs.subtitleFontSize || 'M'}
+          />
         </div>
-      </div>
+      )}
 
       {/* Settings Modal */}
       {showSettings && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center">
-          <div className="bg-[#FAF9F6] dark:bg-gray-800 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md max-h-[85vh] overflow-y-auto">
+          <div className="bg-[#FAF9F6] dark:bg-gray-800 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md max-h-[90vh] sm:max-h-[85vh] flex flex-col">
             {/* Header */}
-            <div className="sticky top-0 bg-[#FAF9F6] dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+            <div className="flex-shrink-0 bg-[#FAF9F6] dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between rounded-t-3xl sm:rounded-t-3xl">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Configurações</h2>
               <button
                 onClick={() => setShowSettings(false)}
@@ -597,9 +678,30 @@ export default function ReaderPage() {
               </button>
             </div>
 
-            <div className="p-6 space-y-6">
-              {/* Tamanho da Fonte do Texto */}
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto overscroll-contain">
+              <div className="p-6 pb-24 sm:pb-6 space-y-6">
+              
+              {/* Seletor de Livro e Capítulo */}
               <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xl">📖</span>
+                  <label className="font-semibold text-gray-900 dark:text-white">
+                    Navegar para
+                  </label>
+                </div>
+                <BookChapterSelector
+                  currentBook={currentBook}
+                  currentChapter={currentChapter}
+                  onNavigate={(book, chapter) => {
+                    handleNavigateToChapter(book, chapter);
+                    setShowSettings(false);
+                  }}
+                />
+              </div>
+              
+              {/* Tamanho da Fonte do Texto */}
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-2 mb-3">
                   <Type className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   <label className="font-semibold text-gray-900 dark:text-white">
@@ -879,10 +981,23 @@ export default function ReaderPage() {
                   Salvar
                 </button>
               </div>
+              </div>
             </div>
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+export default function ReaderPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <ReaderPageContent />
+    </Suspense>
   );
 }

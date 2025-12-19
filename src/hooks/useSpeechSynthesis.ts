@@ -78,27 +78,71 @@ export function useSpeechSynthesis(options: UseSpeechSynthesisOptions = {}) {
       }
 
       const utterance = new SpeechSynthesisUtterance(text);
-      const currentRate = options.rate || 1.0;
-      console.log(`🗣️ Falando texto ${index + 1}/${texts.length} [${currentRate.toFixed(1)}x]:`, text.substring(0, 100));
       const currentLang = options.lang || 'pt-BR';
       utterance.lang = currentLang;
-      utterance.rate = currentRate;
+      
+      // Configuração inicial (pode ser sobrescrita para pt-BR)
+      utterance.rate = options.rate || 1.0;
       utterance.pitch = options.pitch || 1.0;
       utterance.volume = options.volume || 1.0;
+      
+      console.log(`🗣️ Falando texto ${index + 1}/${texts.length} [${utterance.rate.toFixed(2)}x]:`, text.substring(0, 100));
 
       // Selecionar voz específica baseada no idioma
       const voices = window.speechSynthesis.getVoices();
       let selectedVoice = null;
       
       if (currentLang === 'pt-BR') {
-        selectedVoice = voices.find(voice => 
+        // Filtrar vozes em português brasileiro
+        const ptBRVoices = voices.filter(voice => 
           voice.lang === 'pt-BR' || 
           voice.lang.startsWith('pt-BR') ||
-          voice.name.toLowerCase().includes('brazil') ||
-          voice.name.toLowerCase().includes('portuguese (brazil)') ||
-          voice.name.toLowerCase().includes('luciana') ||
-          voice.name.toLowerCase().includes('fernanda')
+          voice.lang === 'pt_BR'
         );
+        
+        // Prioridade 1: Vozes neurais do Google (melhor qualidade)
+        selectedVoice = ptBRVoices.find(v => 
+          v.name.toLowerCase().includes('google') && 
+          v.name.toLowerCase().includes('português')
+        );
+        
+        // Prioridade 2: Vozes femininas de alta qualidade
+        if (!selectedVoice) {
+          const femaleVoiceKeywords = [
+            'luciana', 'fernanda', 'francisca', 'joana', 'helena',
+            'female', 'woman', 'feminina', 'mulher',
+            'natural', 'neural', 'premium', 'enhanced'
+          ];
+          
+          selectedVoice = ptBRVoices.find(v => 
+            femaleVoiceKeywords.some(keyword => 
+              v.name.toLowerCase().includes(keyword)
+            )
+          );
+        }
+        
+        // Prioridade 3: Microsoft ou Apple vozes de qualidade
+        if (!selectedVoice) {
+          selectedVoice = ptBRVoices.find(v => 
+            v.name.toLowerCase().includes('microsoft') ||
+            v.name.toLowerCase().includes('apple') ||
+            v.name.toLowerCase().includes('siri')
+          );
+        }
+        
+        // Prioridade 4: Qualquer voz pt-BR disponível
+        if (!selectedVoice && ptBRVoices.length > 0) {
+          selectedVoice = ptBRVoices[0];
+        }
+        
+        // Ajustar parâmetros para leitura bíblica (voz feminina, suave e clara)
+        if (selectedVoice) {
+          utterance.pitch = 1.05; // Tom levemente mais alto (feminino natural)
+          utterance.rate = 0.88;  // Velocidade mais lenta para clareza e calma
+        }
+        
+        console.log('🇧🇷 Vozes pt-BR disponíveis:', ptBRVoices.map(v => v.name).join(', '));
+        
       } else if (currentLang === 'en-US') {
         selectedVoice = voices.find(voice => 
           voice.lang === 'en-US' || 
