@@ -48,12 +48,12 @@ export default function ReaderContent({ verses, fontSize, highlightedIndex = -1,
       return (
         <span key={verse.number} id={`verse-${verse.number}`} className="inline">
           <sup 
-            className="text-[10px] font-bold text-blue-600 dark:text-blue-400 mr-[2px] select-none"
+            className="text-[10px] font-bold text-stone-400 dark:text-stone-500 mr-[2px] select-none font-sans"
             style={{ lineHeight: '0' }}
           >
             {verse.number}
           </sup>
-          <span>{text}</span>
+          <span className="text-stone-800 dark:text-stone-300">{text}</span>
           {index < verses.length - 1 && ' '}
         </span>
       );
@@ -67,12 +67,12 @@ export default function ReaderContent({ verses, fontSize, highlightedIndex = -1,
       return (
         <span key={verse.number} id={`verse-${verse.number}`} className="inline">
           <sup 
-            className="text-[10px] font-bold text-blue-600 dark:text-blue-400 mr-[2px] select-none"
+            className="text-[10px] font-bold text-stone-400 dark:text-stone-500 mr-[2px] select-none font-sans"
             style={{ lineHeight: '0' }}
           >
             {verse.number}
           </sup>
-          <span className="bg-blue-200 dark:bg-blue-900/40 transition-colors duration-150">{text}</span>
+          <span className="bg-stone-200 dark:bg-stone-800 transition-colors duration-150 rounded px-0.5 text-stone-900 dark:text-stone-100">{text}</span>
           {index < verses.length - 1 && ' '}
         </span>
       );
@@ -86,17 +86,17 @@ export default function ReaderContent({ verses, fontSize, highlightedIndex = -1,
     return (
       <span key={verse.number} id={`verse-${verse.number}`} className="inline">
         <sup 
-          className="text-[10px] font-bold text-blue-600 dark:text-blue-400 mr-[2px] select-none"
+          className="text-[10px] font-bold text-stone-400 dark:text-stone-500 mr-[2px] select-none font-sans"
           style={{ lineHeight: '0' }}
         >
           {verse.number}
         </sup>
         <span>
-          <span className="bg-blue-100 dark:bg-blue-900/20">{before}</span>
-          <span className="bg-blue-500 dark:bg-blue-600 text-white font-semibold px-1 rounded transition-all duration-100">
+          <span className="bg-stone-100 dark:bg-stone-800/50 text-stone-900 dark:text-stone-100">{before}</span>
+          <span className="bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 font-medium px-1 rounded transition-all duration-100">
             {word}
           </span>
-          <span className="bg-blue-100 dark:bg-blue-900/20">{after}</span>
+          <span className="bg-stone-100 dark:bg-stone-800/50 text-stone-900 dark:text-stone-100">{after}</span>
         </span>
         {index < verses.length - 1 && ' '}
       </span>

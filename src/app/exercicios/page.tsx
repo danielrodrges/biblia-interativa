@@ -50,28 +50,28 @@ function ExerciciosContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center px-6 pb-24">
-        <div className="animate-pulse text-gray-600">Carregando exercícios...</div>
+      <div className="min-h-screen w-full flex flex-col items-center justify-center px-6 pb-24 bg-[#FAF9F6]">
+        <div className="animate-pulse text-stone-600 font-serif">Carregando exercícios...</div>
       </div>
     );
   }
 
   if (exercises.length === 0) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-b from-blue-50 to-white px-4 sm:px-6 py-12 pb-24">
+      <div className="min-h-screen w-full bg-[#FAF9F6] px-4 sm:px-6 py-12 pb-24">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+          <div className="bg-white rounded-3xl shadow-sm border border-stone-100 p-8 text-center">
             <AlertCircle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            <h1 className="text-2xl font-serif font-bold text-stone-800 mb-4">
               Nenhum exercício disponível
             </h1>
-            <p className="text-gray-600 mb-6">
+            <p className="text-stone-600 mb-6">
               Para gerar exercícios, você precisa ler alguns capítulos da Bíblia primeiro.
             </p>
             
             {stats && stats.totalReadings > 0 && (
-              <div className="bg-blue-50 rounded-xl p-4 mb-6">
-                <p className="text-sm text-gray-700">
+              <div className="bg-stone-50 rounded-2xl p-4 mb-6 border border-stone-100">
+                <p className="text-sm text-stone-700">
                   <strong>Suas estatísticas:</strong>
                   <br />
                   • {stats.totalChapters} capítulos lidos
@@ -80,7 +80,7 @@ function ExerciciosContent() {
                   <br />
                   • {stats.totalReadings} sessões de leitura
                 </p>
-                <p className="text-xs text-gray-600 mt-2">
+                <p className="text-xs text-stone-500 mt-2">
                   Os exercícios são gerados com base nas palavras que você leu em outro idioma.
                   Continue lendo com tradução ativa!
                 </p>
@@ -90,14 +90,14 @@ function ExerciciosContent() {
             <div className="space-y-3">
               <Link
                 href="/leitura"
-                className="block w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-shadow"
+                className="block w-full bg-stone-800 text-white py-4 rounded-2xl font-medium hover:bg-stone-700 transition-colors"
               >
                 <BookOpen className="w-5 h-5 inline mr-2" />
                 Começar a Ler
               </Link>
               <Link
                 href="/inicio"
-                className="block w-full bg-gray-100 text-gray-700 py-4 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+                className="block w-full bg-stone-100 text-stone-700 py-4 rounded-2xl font-medium hover:bg-stone-200 transition-colors"
               >
                 Voltar ao Início
               </Link>
@@ -152,28 +152,28 @@ function ExerciciosContent() {
     const practiceLang = prefs.practiceLanguage || prefs.textLanguage;
 
     return (
-      <div className="min-h-screen w-full bg-gradient-to-b from-blue-50 to-white pb-24">
+      <div className="min-h-screen w-full bg-[#FAF9F6] pb-24">
         <div className="px-6 py-8 safe-area-top">
-          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+          <div className="bg-white rounded-3xl shadow-sm border border-stone-100 p-8 text-center">
             <Trophy className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl font-serif font-bold text-stone-800 mb-2">
               Exercícios Concluídos!
             </h1>
-            <p className="text-gray-600 mb-6">
+            <p className="text-stone-600 mb-6">
               Vocabulário de {languageNames[practiceLang as string] || 'outro idioma'}
             </p>
 
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl p-6 mb-6">
-              <div className="text-5xl font-bold mb-2">{score}%</div>
-              <div className="text-blue-100">de acertos</div>
+            <div className="bg-stone-800 text-white rounded-2xl p-6 mb-6">
+              <div className="text-5xl font-serif font-bold mb-2">{score}%</div>
+              <div className="text-stone-300">de acertos</div>
               <div className="flex items-center justify-center gap-1 mt-4">
                 {[1, 2, 3].map((star) => (
                   <Star
                     key={star}
                     className={`w-8 h-8 ${
                       star <= stars
-                        ? 'fill-yellow-300 text-yellow-300'
-                        : 'text-blue-300'
+                        ? 'fill-yellow-400 text-yellow-400'
+                        : 'text-stone-600'
                     }`}
                   />
                 ))}
@@ -194,19 +194,19 @@ function ExerciciosContent() {
                   );
                   setExercises(generated);
                 }}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-shadow"
+                className="w-full bg-stone-800 text-white py-4 rounded-2xl font-medium hover:bg-stone-700 transition-colors"
               >
                 Tentar Novamente
               </button>
               <Link
                 href="/leitura"
-                className="block w-full bg-blue-100 text-blue-700 py-4 rounded-xl font-semibold hover:bg-blue-200 transition-colors"
+                className="block w-full bg-stone-100 text-stone-700 py-4 rounded-2xl font-medium hover:bg-stone-200 transition-colors"
               >
                 Continuar Lendo
               </Link>
               <Link
                 href="/inicio"
-                className="block w-full bg-gray-100 text-gray-700 py-4 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+                className="block w-full bg-white border border-stone-200 text-stone-700 py-4 rounded-2xl font-medium hover:bg-stone-50 transition-colors"
               >
                 Voltar ao Início
               </Link>
@@ -218,29 +218,29 @@ function ExerciciosContent() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-blue-50 to-white pb-24">
+    <div className="min-h-screen w-full bg-[#FAF9F6] pb-24">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 sm:px-6 py-4 sm:py-6 safe-area-top sticky top-0 z-10">
+      <div className="bg-white/80 backdrop-blur-md border-b border-stone-100 px-4 sm:px-6 py-4 sm:py-6 safe-area-top sticky top-0 z-10">
         <Link
           href="/inicio"
-          className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-3 sm:mb-4"
+          className="inline-flex items-center gap-2 text-stone-500 hover:text-stone-800 mb-3 sm:mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="text-xs sm:text-sm">Voltar</span>
+          <span className="text-xs sm:text-sm font-medium">Voltar</span>
         </Link>
-        <h1 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2">Exercícios de Vocabulário</h1>
-        <p className="text-blue-100 text-sm">Baseado nas suas leituras</p>
+        <h1 className="text-lg sm:text-xl font-serif font-bold text-stone-800 mb-1 sm:mb-2">Exercícios de Vocabulário</h1>
+        <p className="text-stone-500 text-sm">Baseado nas suas leituras</p>
       </div>
 
       {/* Progresso */}
       <div className="px-6 py-4">
-        <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+        <div className="flex items-center justify-between text-sm text-stone-500 mb-2 font-medium">
           <span>Questão {currentQuestion + 1} de {exercises.length}</span>
           <span>{Math.round(((currentQuestion + 1) / exercises.length) * 100)}%</span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-stone-200 rounded-full h-2">
           <div
-            className="bg-gradient-to-r from-blue-600 to-blue-700 h-2 rounded-full transition-all duration-300"
+            className="bg-stone-800 h-2 rounded-full transition-all duration-300"
             style={{ width: `${((currentQuestion + 1) / exercises.length) * 100}%` }}
           />
         </div>
@@ -248,18 +248,18 @@ function ExerciciosContent() {
 
       {/* Questão */}
       <div className="px-6 py-4">
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+        <div className="bg-white rounded-3xl shadow-sm border border-stone-100 p-6 mb-6">
           <div className="mb-4">
-            <span className="text-xs text-gray-500 uppercase tracking-wide">
+            <span className="text-xs text-stone-400 uppercase tracking-wide font-bold">
               O que significa em português?
             </span>
           </div>
           
-          <h2 className="text-3xl font-bold text-blue-600 mb-2 text-center">
+          <h2 className="text-3xl font-serif font-bold text-stone-800 mb-2 text-center">
             {currentQ.word}
           </h2>
           
-          <p className="text-sm text-gray-500 text-center mb-6">
+          <p className="text-sm text-stone-500 text-center mb-6 font-serif italic">
             {currentQ.reference}
           </p>
 
@@ -275,26 +275,26 @@ function ExerciciosContent() {
                   key={option}
                   onClick={() => handleAnswerSelect(option)}
                   disabled={showResult}
-                  className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                  className={`w-full text-left p-4 rounded-2xl border transition-all ${
                     showCorrect
                       ? 'border-green-500 bg-green-50'
                       : showWrong
                       ? 'border-red-500 bg-red-50'
                       : isSelected
-                      ? 'border-blue-600 bg-blue-50'
-                      : 'border-gray-200 hover:border-blue-300'
+                      ? 'border-stone-800 bg-stone-50'
+                      : 'border-stone-200 hover:border-stone-400 bg-white'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
                         showCorrect
                           ? 'border-green-500 bg-green-500'
                           : showWrong
                           ? 'border-red-500 bg-red-500'
                           : isSelected
-                          ? 'border-blue-600 bg-blue-600'
-                          : 'border-gray-300'
+                          ? 'border-stone-800 bg-stone-800'
+                          : 'border-stone-300'
                       }`}
                     >
                       {showCorrect && <CheckCircle2 className="w-4 h-4 text-white" />}
@@ -303,7 +303,7 @@ function ExerciciosContent() {
                         <div className="w-2 h-2 bg-white rounded-full" />
                       )}
                     </div>
-                    <span className="font-medium text-gray-900">{option}</span>
+                    <span className={`font-medium ${isSelected || showCorrect ? 'text-stone-900' : 'text-stone-600'}`}>{option}</span>
                   </div>
                 </button>
               );
@@ -313,19 +313,19 @@ function ExerciciosContent() {
 
         {/* Explicação */}
         {showResult && (
-          <div className={`rounded-xl p-4 mb-6 ${
+          <div className={`rounded-2xl p-4 mb-6 border ${
             selectedAnswer === currentQ.correctAnswer
-              ? 'bg-green-50 border border-green-200'
-              : 'bg-blue-50 border border-blue-200'
+              ? 'bg-green-50 border-green-200'
+              : 'bg-stone-50 border-stone-200'
           }`}>
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-stone-700">
               {selectedAnswer === currentQ.correctAnswer ? (
                 <>
                   <strong className="text-green-700">✓ Correto!</strong> "{currentQ.word}" significa "{currentQ.portugueseWord}" em português.
                 </>
               ) : (
                 <>
-                  <strong className="text-blue-700">Resposta correta:</strong> "{currentQ.word}" significa "{currentQ.portugueseWord}" em português.
+                  <strong className="text-stone-800">Resposta correta:</strong> "{currentQ.word}" significa "{currentQ.portugueseWord}" em português.
                 </>
               )}
             </p>
@@ -337,10 +337,10 @@ function ExerciciosContent() {
           <button
             onClick={handleCheckAnswer}
             disabled={!selectedAnswer}
-            className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
+            className={`w-full py-4 rounded-2xl font-medium text-lg transition-all ${
               selectedAnswer
-                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:shadow-xl'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                ? 'bg-stone-800 text-white shadow-sm hover:bg-stone-700'
+                : 'bg-stone-200 text-stone-400 cursor-not-allowed'
             }`}
           >
             Verificar Resposta
@@ -348,7 +348,7 @@ function ExerciciosContent() {
         ) : (
           <button
             onClick={handleNextQuestion}
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-shadow"
+            className="w-full bg-stone-800 text-white py-4 rounded-2xl font-medium text-lg shadow-sm hover:bg-stone-700 transition-colors"
           >
             {currentQuestion < exercises.length - 1 ? 'Próxima Questão' : 'Ver Resultado'}
           </button>
@@ -361,8 +361,8 @@ function ExerciciosContent() {
 export default function ExerciciosPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600">Carregando exercícios...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#FAF9F6]">
+        <p className="text-stone-600 font-serif">Carregando exercícios...</p>
       </div>
     }>
       <ExerciciosContent />

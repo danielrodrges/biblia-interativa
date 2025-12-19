@@ -45,8 +45,8 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.98 0.01 85); /* #FAF9F6 equivalent in oklch approx */
+  --foreground: oklch(0.27 0.02 85); /* Stone 800 */
   
   /* Additional font families for AI usage */
   --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;

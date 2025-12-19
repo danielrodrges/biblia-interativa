@@ -10,21 +10,21 @@ interface ReaderHeaderProps {
 
 export default function ReaderHeader({ book, chapter, onSettingsClick }: ReaderHeaderProps) {
   return (
-    <header className="sticky top-0 z-20 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
-      <div className="max-w-[720px] mx-auto px-4 py-3">
+    <header className="sticky top-0 z-20 bg-[#FAF9F6]/95 dark:bg-stone-950/95 backdrop-blur-md border-b border-stone-200 dark:border-stone-800">
+      <div className="max-w-[720px] mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-xl font-serif font-bold text-stone-800 dark:text-stone-100">
               {book} {chapter}
             </h1>
           </div>
           
           <button
             onClick={onSettingsClick}
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-2 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
             aria-label="Configurações"
           >
-            <Settings className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <Settings className="w-5 h-5 text-stone-600 dark:text-stone-400" />
           </button>
         </div>
       </div>

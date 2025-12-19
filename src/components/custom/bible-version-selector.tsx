@@ -45,14 +45,14 @@ export default function BibleVersionSelector({
 
   if (versions.length === 0) {
     return (
-      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+      <div className="bg-stone-50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 rounded-xl p-4">
         <div className="flex items-start gap-3">
-          <Globe className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5" />
+          <Globe className="w-5 h-5 text-stone-600 dark:text-stone-400 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+            <p className="text-sm font-medium text-stone-900 dark:text-stone-100">
               Nenhuma versão disponível
             </p>
-            <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+            <p className="text-sm text-stone-600 dark:text-stone-400 mt-1">
               Não há versões bíblicas disponíveis para {languageName}.
             </p>
           </div>
@@ -65,8 +65,8 @@ export default function BibleVersionSelector({
     <div className="space-y-3">
       {label && (
         <div className="flex items-center gap-2">
-          <BookOpen className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <BookOpen className="w-4 h-4 text-stone-600 dark:text-stone-400" />
+          <label className="text-sm font-medium text-stone-700 dark:text-stone-300">
             {label}
           </label>
         </div>
@@ -77,33 +77,35 @@ export default function BibleVersionSelector({
           <button
             key={version.version_id}
             onClick={() => handleVersionSelect(version.version_id)}
-            className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+            className={`w-full text-left p-4 rounded-xl border transition-all duration-200 ${
               selectedVersion?.version_id === version.version_id
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800'
+                ? 'border-stone-800 bg-stone-50 dark:border-stone-200 dark:bg-stone-800 ring-1 ring-stone-800 dark:ring-stone-200'
+                : 'border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 bg-white dark:bg-stone-900'
             }`}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-gray-900 dark:text-gray-100">
+                  <span className="font-serif font-bold text-stone-900 dark:text-stone-100">
                     {version.version_id}
                   </span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400">
                     {version.year}
                   </span>
                 </div>
-                <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
+                <p className="text-sm text-stone-700 dark:text-stone-300 mb-1">
                   {version.version_name}
                 </p>
                 {version.description && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-xs text-stone-500 dark:text-stone-400">
                     {version.description}
                   </p>
                 )}
               </div>
               {selectedVersion?.version_id === version.version_id && (
-                <Check className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                <div className="bg-stone-800 dark:bg-stone-200 rounded-full p-1">
+                  <Check className="w-3 h-3 text-white dark:text-stone-900" />
+                </div>
               )}
             </div>
           </button>
@@ -111,7 +113,7 @@ export default function BibleVersionSelector({
       </div>
 
       {selectedVersion && (
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 text-xs text-gray-600 dark:text-gray-400">
+        <div className="bg-stone-50 dark:bg-stone-900 rounded-xl p-3 text-xs text-stone-600 dark:text-stone-400 border border-stone-100 dark:border-stone-800">
           <p>
             <span className="font-medium">Fonte:</span>{' '}
             {selectedVersion.source_reference || 'Não especificada'}
