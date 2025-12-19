@@ -1,53 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import { translateWithFallback } from '@/lib/translation-services';
 
 export const runtime = 'edge';
 
-// Cache em memória no servidor (Edge Runtime)
-const serverCache = new Map<string, string>();
+// Cache em memória para respostas rápidas
+const memoryCache = new Map<string, { translated: string; timestamp: number }>();
+const MEMORY_CACHE_TTL = 1000 * 60 * 60; // 1 hora
 
-async function translateViaGoogle(text: string, targetLang: string): Promise<string> {
-  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=pt&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
-  
-  const response = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      'Accept': 'application/json'
-    }
-  });
-  
-  if (!response.ok) {
-    throw new Error(`Google API failed: ${response.status}`);
-  }
-  
-  const data = await response.json();
-  const translated = data[0].map((item: any[]) => item[0]).join('');
-  return translated;
+// Cliente Supabase para cache persistente
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  return createClient(supabaseUrl, supabaseKey);
 }
 
-async function translateViaMyMemory(text: string, targetLang: string): Promise<string> {
-  const langMap: Record<string, string> = {
-    'en': 'en-US',
-    'es': 'es-ES',
-    'it': 'it-IT',
-    'fr': 'fr-FR'
-  };
-  
-  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=pt-BR|${langMap[targetLang]}`;
-  
-  const response = await fetch(url);
-  
-  if (!response.ok) {
-    throw new Error(`MyMemory API failed: ${response.status}`);
-  }
-  
-  const data = await response.json();
-  
-  if (data.responseStatus === 200 && data.responseData?.translatedText) {
-    return data.responseData.translatedText;
-  }
-  
-  throw new Error('Invalid MyMemory response');
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -69,65 +36,106 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Verificar cache
     const cacheKey = `pt-${targetLang}:${text}`;
-    if (serverCache.has(cacheKey)) {
-      const cached = serverCache.get(cacheKey)!;
-      console.log('💾 Cache hit:', text.substring(0, 30));
-      return NextResponse.json({ 
-        translated: cached,
-        cached: true 
-      });
-    }
+    const now = Date.now();
     
-    let translated = text;
-    let method = 'none';
-    
-    // Tentar Google primeiro
-    try {
-      translated = await translateViaGoogle(text, targetLang);
-      method = 'google';
-      console.log('✅ Google translation successful');
-    } catch (error) {
-      console.log('⚠️ Google failed, trying MyMemory...');
-      
-      // Tentar MyMemory como fallback
-      try {
-        translated = await translateViaMyMemory(text, targetLang);
-        method = 'mymemory';
-        console.log('✅ MyMemory translation successful');
-      } catch (fallbackError) {
-        console.error('❌ All translation methods failed');
-        return NextResponse.json(
-          { error: 'Translation failed', original: text },
-          { status: 500 }
-        );
+    // 1. Verificar cache em memória (mais rápido)
+    if (memoryCache.has(cacheKey)) {
+      const cached = memoryCache.get(cacheKey)!;
+      if (now - cached.timestamp < MEMORY_CACHE_TTL) {
+        console.log('⚡ Cache em memória hit:', text.substring(0, 30));
+        return NextResponse.json({
+          translated: cached.translated,
+          cached: true,
+          source: 'memory'
+        });
+      } else {
+        memoryCache.delete(cacheKey);
       }
     }
     
-    // Verificar se realmente traduziu (não retornou texto idêntico)
-    if (translated.toLowerCase().trim() === text.toLowerCase().trim()) {
-      console.warn('⚠️ Translation returned identical text');
-      return NextResponse.json({ 
-        translated: text,
-        cached: false,
-        warning: 'Translation returned identical text'
+    // 2. Verificar cache no Supabase (persistente)
+    const supabase = getSupabaseClient();
+    
+    const { data: cachedTranslation, error: cacheError } = await supabase
+      .from('translations_cache')
+      .select('translated_text, translation_service, quality_score')
+      .eq('source_text', text)
+      .eq('source_lang', 'pt')
+      .eq('target_lang', targetLang)
+      .gte('quality_score', 0.7) // Apenas traduções de qualidade
+      .single();
+    
+    if (!cacheError && cachedTranslation) {
+      console.log('💾 Cache Supabase hit:', text.substring(0, 30));
+      
+      // Atualizar contador de uso
+      await supabase
+        .from('translations_cache')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('source_text', text)
+        .eq('target_lang', targetLang);
+      
+      // Armazenar em memória para próximas requisições
+      memoryCache.set(cacheKey, {
+        translated: cachedTranslation.translated_text,
+        timestamp: now
+      });
+      
+      return NextResponse.json({
+        translated: cachedTranslation.translated_text,
+        cached: true,
+        source: 'database',
+        provider: cachedTranslation.translation_service,
+        quality: cachedTranslation.quality_score
       });
     }
     
-    // Armazenar no cache
-    serverCache.set(cacheKey, translated);
+    // 3. Fazer nova tradução com sistema robusto de fallback
+    console.log('🌐 Nova tradução:', text.substring(0, 50));
     
-    // Limitar tamanho do cache (máximo 1000 entradas)
-    if (serverCache.size > 1000) {
-      const firstKey = serverCache.keys().next().value;
-      serverCache.delete(firstKey);
+    const deeplApiKey = process.env.DEEPL_API_KEY; // Opcional
+    const result = await translateWithFallback(text, targetLang, deeplApiKey);
+    
+    // 4. Salvar no Supabase se qualidade for boa
+    if (result.qualityScore >= 0.7) {
+      await supabase
+        .from('translations_cache')
+        .upsert({
+          source_text: text,
+          source_lang: 'pt',
+          target_lang: targetLang,
+          translated_text: result.translated,
+          translation_service: result.provider,
+          quality_score: result.qualityScore
+        }, {
+          onConflict: 'source_text,source_lang,target_lang'
+        });
+      
+      console.log(`✅ Tradução salva no cache (${result.provider}, score: ${result.qualityScore.toFixed(2)})`);
+    } else {
+      console.warn(`⚠️ Tradução não cacheada - baixa qualidade (${result.qualityScore.toFixed(2)})`);
     }
     
-    return NextResponse.json({ 
-      translated,
+    // 5. Armazenar em memória
+    if (result.qualityScore >= 0.5) {
+      memoryCache.set(cacheKey, {
+        translated: result.translated,
+        timestamp: now
+      });
+      
+      // Limitar tamanho do cache em memória
+      if (memoryCache.size > 1000) {
+        const firstKey = memoryCache.keys().next().value;
+        memoryCache.delete(firstKey);
+      }
+    }
+    
+    return NextResponse.json({
+      translated: result.translated,
       cached: false,
-      method 
+      provider: result.provider,
+      quality: result.qualityScore
     });
     
   } catch (error: any) {
