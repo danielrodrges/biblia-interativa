@@ -23,13 +23,10 @@ export default function LoginPage() {
     try {
       const result = await signInWithEmail(email, password);
       console.log('✅ Login bem-sucedido:', result);
-      
-      // Aguardar um pouco para garantir que a sessão foi salva
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Usar window.location.href para forçar reload completo
       console.log('🚀 Redirecionando para /inicio');
-      window.location.href = '/inicio';
+      
+      // Usar replace para não adicionar na história e evitar loop
+      window.location.replace('/inicio');
     } catch (err: any) {
       console.error('❌ Erro ao fazer login:', err);
       setError(err.message || 'Erro ao fazer login. Verifique suas credenciais.');

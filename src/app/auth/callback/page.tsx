@@ -93,11 +93,8 @@ function CallbackContent() {
             setStatus('Login realizado! Redirecionando...');
             console.log('🚀 Redirecionando para /inicio');
             
-            // Aguardar um pouco para garantir persistência da sessão
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Usar window.location.href em vez de router.push para forçar reload
-            window.location.href = '/inicio';
+            // Redirecionar imediatamente - cookies já foram salvos
+            window.location.replace('/inicio');
             return;
           }
         }
@@ -117,12 +114,11 @@ function CallbackContent() {
         if (session) {
           console.log('✅ Sessão existente encontrada');
           setStatus('Autenticado! Redirecionando...');
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          window.location.href = '/inicio';
+          window.location.replace('/inicio');
         } else {
           console.warn('⚠️ Nenhuma sessão encontrada');
           setStatus('Nenhuma sessão encontrada. Redirecionando...');
-          setTimeout(() => router.push('/auth/login'), 2000);
+          setTimeout(() => window.location.replace('/auth/login'), 2000);
         }
       } catch (err: any) {
         console.error('❌ Erro no callback:', err);

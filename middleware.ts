@@ -105,11 +105,6 @@ export async function middleware(request: NextRequest) {
   );
 
   if (isPublicRoute) {
-    // Se está logado e tentando acessar páginas de auth, redirecionar para /inicio
-    if (session && pathname.startsWith('/auth/') && pathname !== '/auth/callback') {
-      const redirectUrl = new URL('/inicio', request.url);
-      return NextResponse.redirect(redirectUrl);
-    }
     return response;
   }
 
