@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { ensureUserSetup } from './ensure-user-setup';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -80,6 +81,18 @@ export async function signInWithEmail(email: string, password: string) {
     console.error('Erro ao fazer login:', error);
     throw error;
   }
+
+  // Garantir que o usuário tem perfil, stats e assinatura configurados
+  if (data.user && data.session) {
+    try {
+      const fullName = data.user.user_metadata?.full_name || email.split('@')[0];
+      await ensureUserSetup(data.user.id, email, fullName);
+      console.log('✅ Usuário verificado com acesso gratuito');
+    } catch (setupError) {
+      console.warn('⚠️ Erro ao verificar setup do usuário:', setupError);
+      // Não bloqueia o login se houver erro no setup
+    }
+  }
   
   return data;
 }
@@ -130,27 +143,18 @@ export async function signUpWithEmail(email: string, password: string, fullName:
     identities: data.user?.identities?.length
   });
 
-  // Criar perfil manualmente se o usuário foi criado
-  // (mesmo sem sessão, quando confirmação de email é obrigatória)
+  // Criar perfil, stats e assinatura gratuita automaticamente
   if (data.user) {
     try {
-      // Somente tentar criar perfil se já tem sessão (auto-confirmed)
+      // Somente tentar criar se já tem sessão (auto-confirmed)
       if (data.session) {
-        await supabase.from('profiles').upsert({
-          id: data.user.id,
-          full_name: fullName,
-        }, { onConflict: 'id' });
-
-        await supabase.from('reading_stats').upsert({
-          user_id: data.user.id,
-        }, { onConflict: 'user_id' });
-        
-        console.log('✅ Perfil criado (auto-confirmed)');
+        await ensureUserSetup(data.user.id, email, fullName);
+        console.log('✅ Usuário configurado com acesso gratuito (auto-confirmed)');
       } else {
-        console.log('⏳ Email de confirmação enviado. Perfil será criado após confirmação.');
+        console.log('⏳ Email de confirmação enviado. Setup será feito após confirmação.');
       }
-    } catch (profileError) {
-      console.warn('⚠️ Erro ao criar perfil (trigger pode criar):', profileError);
+    } catch (setupError) {
+      console.warn('⚠️ Erro ao configurar usuário (trigger pode criar):', setupError);
     }
   }
   

@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { ensureUserSetup } from '@/lib/ensure-user-setup';
 
 function CallbackContent() {
   const router = useRouter();
@@ -51,36 +52,24 @@ function CallbackContent() {
               provider: data.user.app_metadata?.provider
             });
 
-            setStatus('Criando perfil...');
+            setStatus('Configurando conta...');
             
-            // Criar perfil caso não exista
+            // Configurar usuário completo: perfil, stats, assinatura gratuita
             const userId = data.user.id;
+            const email = data.user.email || '';
             const fullName = data.user.user_metadata?.full_name || 
                            data.user.user_metadata?.name || 
-                           data.user.email?.split('@')[0] || 
+                           email.split('@')[0] || 
                            'Usuário';
 
-            console.log('👤 Criando perfil para:', { userId, fullName });
+            console.log('🔧 Configurando usuário:', { userId, fullName });
 
-            // Tentar criar perfil
             try {
-              await supabase.from('profiles').upsert({
-                id: userId,
-                full_name: fullName,
-              }, { onConflict: 'id' });
-              console.log('✅ Perfil criado/atualizado');
-            } catch (profileError) {
-              console.warn('⚠️ Erro ao criar perfil:', profileError);
-            }
-
-            // Tentar criar stats
-            try {
-              await supabase.from('reading_stats').upsert({
-                user_id: userId,
-              }, { onConflict: 'user_id' });
-              console.log('✅ Stats criadas/atualizadas');
-            } catch (statsError) {
-              console.warn('⚠️ Erro ao criar stats:', statsError);
+              await ensureUserSetup(userId, email, fullName);
+              console.log('✅ Usuário configurado com acesso gratuito');
+            } catch (setupError) {
+              console.warn('⚠️ Erro ao configurar usuário:', setupError);
+              // Continua mesmo com erro, deixa o RLS criar os dados depois
             }
 
             setStatus('Login realizado! Redirecionando...');

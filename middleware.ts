@@ -99,15 +99,6 @@ export async function middleware(request: NextRequest) {
   // Verificar sessão do usuário
   const { data: { session } } = await supabase.auth.getSession();
 
-  // Debug: logar sessão
-  if (pathname.startsWith('/inicio') || pathname.startsWith('/auth/callback')) {
-    console.log('🔍 Middleware:', { 
-      pathname, 
-      hasSession: !!session,
-      userId: session?.user?.id 
-    });
-  }
-
   // Se está em rota pública, permitir acesso
   const isPublicRoute = publicRoutes.some(route => 
     pathname === route || pathname.startsWith(route + '/')
