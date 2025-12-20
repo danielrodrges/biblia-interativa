@@ -18,15 +18,16 @@ const publicRoutes = [
 ];
 
 // Rotas protegidas que requerem autenticação
-const protectedRoutes = [
-  // '/inicio', // TEMPORARIAMENTE DESABILITADO PARA DEBUG
-  '/leitura',
-  '/perfil',
-  '/configuracoes',
-  '/exercicios',
-  '/praticar',
-  '/apostolos',
-  '/checkout',
+// TEMPORARIAMENTE TODAS DESABILITADAS PARA DEBUG
+const protectedRoutes: string[] = [
+  // '/inicio',
+  // '/leitura',
+  // '/perfil',
+  // '/configuracoes',
+  // '/exercicios',
+  // '/praticar',
+  // '/apostolos',
+  // '/checkout',
 ];
 
 export async function middleware(request: NextRequest) {
