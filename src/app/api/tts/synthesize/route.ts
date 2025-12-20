@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { TextToSpeechClient } from '@google-cloud/text-to-speech';
 
 // Interface para as opções de síntese
 interface SynthesizeRequest {
@@ -56,50 +57,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Obter access token do Google Cloud
-    const accessToken = await getAccessToken(credentialsJson);
+    // Criar cliente do Google Cloud TTS
+    const client = new TextToSpeechClient({
+      credentials: credentialsJson,
+    });
 
-    // Chamar API do Google Cloud Text-to-Speech
-    const response = await fetch(
-      'https://texttospeech.googleapis.com/v1/text:synthesize',
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          input: { text },
-          voice: {
-            languageCode,
-            name: voice,
-            ssmlGender: 'MALE',
-          },
-          audioConfig: {
-            audioEncoding: 'MP3',
-            speakingRate,
-            pitch,
-            volumeGainDb,
-            effectsProfileId: ['headphone-class-device'], // Otimizado para fones
-          },
-        }),
-      }
-    );
+    // Configurar request
+    const [response] = await client.synthesizeSpeech({
+      input: { text },
+      voice: {
+        languageCode,
+        name: voice,
+        ssmlGender: 'MALE',
+      },
+      audioConfig: {
+        audioEncoding: 'MP3',
+        speakingRate,
+        pitch,
+        volumeGainDb,
+        effectsProfileId: ['headphone-class-device'], // Otimizado para fones
+      },
+    });
 
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('❌ Erro na API do Google:', error);
+    // Retornar áudio em base64
+    const audioContent = response.audioContent;
+    if (!audioContent) {
       return NextResponse.json(
-        { error: 'Erro ao sintetizar áudio', details: error },
-        { status: response.status }
+        { error: 'Nenhum áudio gerado' },
+        { status: 500 }
       );
     }
 
-    const data = await response.json();
+    const base64Audio = Buffer.from(audioContent).toString('base64');
 
-    // Retornar áudio em base64
     return NextResponse.json({
-      audio: data.audioContent,  // Base64
+      audio: base64Audio,
       format: 'mp3',
       voice,
       languageCode,
@@ -108,73 +100,22 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error('❌ Erro ao sintetizar:', error);
+    
+    // Mensagem específica para erro de permissão
+    if (error.message?.includes('permission') || error.code === 7) {
+      return NextResponse.json(
+        { 
+          error: 'Permissão negada',
+          message: 'Service Account não tem permissão para Text-to-Speech API',
+          hint: 'Adicione a role "Cloud Text-to-Speech User" no Google Cloud Console'
+        },
+        { status: 403 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Erro interno', message: error.message },
       { status: 500 }
     );
   }
-}
-
-// Função para obter access token usando service account
-async function getAccessToken(credentials: any): Promise<string> {
-  const jwtHeader = {
-    alg: 'RS256',
-    typ: 'JWT',
-  };
-
-  const now = Math.floor(Date.now() / 1000);
-  const jwtClaim = {
-    iss: credentials.client_email,
-    scope: 'https://www.googleapis.com/auth/cloud-platform',
-    aud: 'https://oauth2.googleapis.com/token',
-    exp: now + 3600,
-    iat: now,
-  };
-
-  // Criar JWT
-  const header = base64UrlEncode(JSON.stringify(jwtHeader));
-  const claim = base64UrlEncode(JSON.stringify(jwtClaim));
-  const signature = await signJwt(`${header}.${claim}`, credentials.private_key);
-  
-  const jwt = `${header}.${claim}.${signature}`;
-
-  // Trocar JWT por access token
-  const response = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion: jwt,
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Erro ao obter access token: ${error}`);
-  }
-
-  const data = await response.json();
-  return data.access_token;
-}
-
-// Helper para base64 URL encoding
-function base64UrlEncode(str: string): string {
-  const base64 = Buffer.from(str).toString('base64');
-  return base64
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
-}
-
-// Assinar JWT com private key
-async function signJwt(data: string, privateKey: string): Promise<string> {
-  const crypto = await import('crypto');
-  const sign = crypto.createSign('RSA-SHA256');
-  sign.update(data);
-  sign.end();
-  
-  const signature = sign.sign(privateKey);
-  return base64UrlEncode(signature.toString('base64'));
 }
