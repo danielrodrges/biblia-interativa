@@ -74,8 +74,12 @@ export async function POST(request: NextRequest) {
         audioEncoding: 'MP3',
         speakingRate,
         pitch,
-        volumeGainDb,
-        effectsProfileId: ['headphone-class-device'], // Otimizado para fones
+        volumeGainDb: 2.0, // Volume aumentado para clareza
+        sampleRateHertz: 24000, // Alta qualidade de amostragem
+        effectsProfileId: [
+          'large-home-entertainment-class-device', // Máxima qualidade
+          'headphone-class-device' // Otimizado para fones
+        ],
       },
     });
 
