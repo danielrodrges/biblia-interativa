@@ -101,45 +101,60 @@ export function useSpeechSynthesis(options: UseSpeechSynthesisOptions = {}) {
           voice.lang === 'pt_BR'
         );
         
-        // Prioridade 1: Vozes neurais do Google (melhor qualidade)
+        // 🎙️ PRIORIDADE PARA LEITURA BÍBLICA: Voz masculina grave e sábia
+        
+        // Prioridade 1: Vozes masculinas específicas de alta qualidade
+        const maleVoiceKeywords = [
+          'daniel', 'felipe', 'fernando', 'ricardo', 'carlos',
+          'male', 'man', 'masculino', 'homem',
+          'deep', 'grave', 'baixo', 'profunda',
+          'narrator', 'narrador', 'storyteller'
+        ];
+        
         selectedVoice = ptBRVoices.find(v => 
-          v.name.toLowerCase().includes('google') && 
-          v.name.toLowerCase().includes('português')
+          maleVoiceKeywords.some(keyword => 
+            v.name.toLowerCase().includes(keyword)
+          )
         );
         
-        // Prioridade 2: Vozes femininas de alta qualidade
+        // Prioridade 2: Vozes neurais/premium do Google (geralmente masculinas)
         if (!selectedVoice) {
-          const femaleVoiceKeywords = [
-            'luciana', 'fernanda', 'francisca', 'joana', 'helena',
-            'female', 'woman', 'feminina', 'mulher',
-            'natural', 'neural', 'premium', 'enhanced'
-          ];
-          
           selectedVoice = ptBRVoices.find(v => 
-            femaleVoiceKeywords.some(keyword => 
-              v.name.toLowerCase().includes(keyword)
-            )
+            v.name.toLowerCase().includes('google') && 
+            v.name.toLowerCase().includes('português') &&
+            !v.name.toLowerCase().includes('female') &&
+            !v.name.toLowerCase().includes('feminina')
           );
         }
         
-        // Prioridade 3: Microsoft ou Apple vozes de qualidade
+        // Prioridade 3: Microsoft ou Apple vozes masculinas
         if (!selectedVoice) {
           selectedVoice = ptBRVoices.find(v => 
-            v.name.toLowerCase().includes('microsoft') ||
-            v.name.toLowerCase().includes('apple') ||
-            v.name.toLowerCase().includes('siri')
+            (v.name.toLowerCase().includes('microsoft') ||
+             v.name.toLowerCase().includes('apple')) &&
+            !v.name.toLowerCase().includes('female') &&
+            !v.name.toLowerCase().includes('feminina') &&
+            !v.name.toLowerCase().includes('woman')
           );
         }
         
-        // Prioridade 4: Qualquer voz pt-BR disponível
+        // Prioridade 4: Qualquer voz pt-BR disponível (evitar femininas)
         if (!selectedVoice && ptBRVoices.length > 0) {
-          selectedVoice = ptBRVoices[0];
+          // Tentar pegar uma que não seja explicitamente feminina
+          selectedVoice = ptBRVoices.find(v => 
+            !v.name.toLowerCase().includes('female') &&
+            !v.name.toLowerCase().includes('feminina') &&
+            !v.name.toLowerCase().includes('woman') &&
+            !v.name.toLowerCase().includes('luciana') &&
+            !v.name.toLowerCase().includes('fernanda')
+          ) || ptBRVoices[0];
         }
         
-        // Ajustar parâmetros para leitura bíblica (voz feminina, suave e clara)
+        // ⚙️ AJUSTES PARA VOZ MASCULINA SÁBIA E PROFUNDA
         if (selectedVoice) {
-          utterance.pitch = 1.05; // Tom levemente mais alto (feminino natural)
-          utterance.rate = 0.88;  // Velocidade mais lenta para clareza e calma
+          utterance.pitch = 0.85;  // Tom mais grave (masculino profundo)
+          utterance.rate = 0.85;   // Velocidade calma e pausada (sabedoria)
+          utterance.volume = 1.0;  // Volume cheio para clareza
         }
         
         console.log('🇧🇷 Vozes pt-BR disponíveis:', ptBRVoices.map(v => v.name).join(', '));
