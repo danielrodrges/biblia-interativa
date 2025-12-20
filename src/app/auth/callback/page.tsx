@@ -24,8 +24,17 @@ function CallbackContent() {
 
         if (error) {
           console.error('❌ Erro na URL:', error, errorDescription);
-          setStatus('Erro na autenticação: ' + errorDescription);
-          setTimeout(() => router.push('/auth/login'), 3000);
+          
+          // Tratamento específico para erro de usuário já registrado
+          if (errorDescription?.includes('User already registered') || 
+              errorDescription?.includes('already registered')) {
+            setStatus('Esta conta já existe com outro método de login. Use email/senha.');
+            console.warn('⚠️ Conta existe com provider diferente');
+          } else {
+            setStatus('Erro na autenticação: ' + errorDescription);
+          }
+          
+          setTimeout(() => router.push('/auth/login'), 4000);
           return;
         }
 
@@ -49,8 +58,17 @@ function CallbackContent() {
             console.log('✅ Sessão obtida:', {
               userId: data.user.id,
               email: data.user.email,
-              provider: data.user.app_metadata?.provider
+              provider: data.user.app_metadata?.provider,
+              identities: data.user.identities?.map((i: any) => i.provider)
             });
+
+            // Verificar se usuário tem identidades vinculadas
+            if (!data.user.identities || data.user.identities.length === 0) {
+              console.error('❌ Usuário sem identidades vinculadas!');
+              setStatus('Erro: Conta corrompida. Entre em contato com suporte.');
+              setTimeout(() => router.push('/auth/login'), 5000);
+              return;
+            }
 
             setStatus('Configurando conta...');
             
