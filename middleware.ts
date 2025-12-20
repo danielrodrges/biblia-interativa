@@ -99,12 +99,20 @@ export async function middleware(request: NextRequest) {
   // Verificar sessão do usuário
   const { data: { session } } = await supabase.auth.getSession();
 
+  console.log('🔍 MIDDLEWARE:', {
+    path: pathname,
+    hasSession: !!session,
+    userId: session?.user?.id,
+    timestamp: new Date().toISOString()
+  });
+
   // Se está em rota pública, permitir acesso
   const isPublicRoute = publicRoutes.some(route => 
     pathname === route || pathname.startsWith(route + '/')
   );
 
   if (isPublicRoute) {
+    console.log('✅ Rota pública, permitindo acesso');
     return response;
   }
 
@@ -114,9 +122,14 @@ export async function middleware(request: NextRequest) {
   );
 
   if (isProtectedRoute && !session) {
+    console.log('❌ Rota protegida sem sessão, redirecionando para login');
     const redirectUrl = new URL('/auth/login', request.url);
     redirectUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(redirectUrl);
+  }
+
+  if (isProtectedRoute && session) {
+    console.log('✅ Rota protegida COM sessão, permitindo acesso');
   }
 
   // Redirecionar raiz para welcome ou inicio baseado em autenticação

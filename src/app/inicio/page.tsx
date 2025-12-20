@@ -43,6 +43,7 @@ export default function InicioPage() {
   const [suggestions, setSuggestions] = useState<ReadingSuggestion[]>([]);
 
   useEffect(() => {
+    console.log('📍 InicioPage montado, URL:', window.location.href);
     const prefs = getPreferences();
     // Não redireciona mais para onboarding - página inicial é sempre acessível
     setPreferences(prefs);
