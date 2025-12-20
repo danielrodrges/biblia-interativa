@@ -19,7 +19,7 @@ const publicRoutes = [
 
 // Rotas protegidas que requerem autenticação
 const protectedRoutes = [
-  '/inicio',
+  // '/inicio', // TEMPORARIAMENTE DESABILITADO PARA DEBUG
   '/leitura',
   '/perfil',
   '/configuracoes',
