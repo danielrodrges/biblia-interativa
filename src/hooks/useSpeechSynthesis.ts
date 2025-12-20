@@ -152,9 +152,9 @@ export function useSpeechSynthesis(options: UseSpeechSynthesisOptions = {}) {
         
         // ⚙️ AJUSTES PARA VOZ MASCULINA SÁBIA E PROFUNDA
         if (selectedVoice) {
-          utterance.pitch = 0.85;  // Tom mais grave (masculino profundo)
-          utterance.rate = 0.85;   // Velocidade calma e pausada (sabedoria)
-          utterance.volume = 1.0;  // Volume cheio para clareza
+          utterance.pitch = 0.70;  // Tom grave de contador de histórias
+          utterance.rate = 0.82;   // Velocidade pausada e dramática
+          utterance.volume = 1.0;  // Volume máximo para presença
         }
         
         console.log('🇧🇷 Vozes pt-BR disponíveis:', ptBRVoices.map(v => v.name).join(', '));

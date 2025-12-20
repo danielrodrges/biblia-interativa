@@ -18,9 +18,9 @@ export async function POST(request: NextRequest) {
       text, 
       voice = 'pt-BR-Neural2-B',  // Voz masculina neural (melhor qualidade)
       languageCode = 'pt-BR',
-      speakingRate = 0.90,  // Velocidade um pouco mais rápida para clareza
-      pitch = -1.0,         // Tom menos grave para mais nitidez
-      volumeGainDb = 2.0    // Volume aumentado para clareza
+      speakingRate = 0.82,  // Velocidade pausada de contador de histórias
+      pitch = -3.5,         // Tom grave e profundo, voz de sabedoria
+      volumeGainDb = 4.0    // Volume bem aumentado para presença
     } = body;
 
     if (!text || text.trim().length === 0) {
@@ -74,11 +74,11 @@ export async function POST(request: NextRequest) {
         audioEncoding: 'MP3',
         speakingRate,
         pitch,
-        volumeGainDb: 2.0, // Volume aumentado para clareza
+        volumeGainDb: 4.5, // Volume máximo para presença vocal
         sampleRateHertz: 24000, // Alta qualidade de amostragem
         effectsProfileId: [
-          'large-home-entertainment-class-device', // Máxima qualidade
-          'headphone-class-device' // Otimizado para fones
+          'large-home-entertainment-class-device', // Som rico e envolvente
+          'wearable-class-device' // Clareza em qualquer dispositivo
         ],
       },
     });

@@ -29,8 +29,9 @@ export function useHybridTTS(options: UseGoogleTTSOptions = {}) {
   // Fallback para Web Speech API
   const webSpeech = useSpeechSynthesis({
     lang: options.languageCode || 'pt-BR',
-    rate: options.speakingRate || 0.85,
-    pitch: 0.85, // Web Speech usa escala diferente
+    rate: options.speakingRate || 0.82,  // Pausado e dramático
+    pitch: 0.75, // Web Speech usa escala 0-2 (0.75 = grave)
+    volume: 1.0, // Volume máximo
   });
 
   // Limpar URLs ao desmontar
@@ -111,9 +112,9 @@ export function useHybridTTS(options: UseGoogleTTSOptions = {}) {
           text,
           voice: options.voice || 'pt-BR-Neural2-B',
           languageCode: options.languageCode || 'pt-BR',
-          speakingRate: options.speakingRate || 0.90,
-          pitch: options.pitch || -1.0,
-          volumeGainDb: 2.0, // Volume aumentado para clareza máxima
+          speakingRate: options.speakingRate || 0.82,  // Contador de histórias
+          pitch: options.pitch || -3.5,  // Voz grave e sábia
+          volumeGainDb: 4.5, // Volume com presença
         });
 
         if (!result) {
