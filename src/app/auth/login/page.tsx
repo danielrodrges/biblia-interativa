@@ -18,12 +18,21 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
+    console.log('🔐 Tentando login com:', { email });
+
     try {
-      await signInWithEmail(email, password);
-      router.push('/inicio');
+      const result = await signInWithEmail(email, password);
+      console.log('✅ Login bem-sucedido:', result);
+      
+      // Aguardar um pouco para garantir que a sessão foi salva
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Usar window.location.href para forçar reload completo
+      console.log('🚀 Redirecionando para /inicio');
+      window.location.href = '/inicio';
     } catch (err: any) {
+      console.error('❌ Erro ao fazer login:', err);
       setError(err.message || 'Erro ao fazer login. Verifique suas credenciais.');
-    } finally {
       setLoading(false);
     }
   };
