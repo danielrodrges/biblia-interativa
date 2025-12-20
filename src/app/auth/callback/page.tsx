@@ -87,8 +87,10 @@ function CallbackContent() {
             console.log('🚀 Redirecionando para /inicio');
             
             // Aguardar um pouco para garantir persistência da sessão
-            await new Promise(resolve => setTimeout(resolve, 500));
-            router.push('/inicio');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Usar window.location.href em vez de router.push para forçar reload
+            window.location.href = '/inicio';
             return;
           }
         }
@@ -108,8 +110,8 @@ function CallbackContent() {
         if (session) {
           console.log('✅ Sessão existente encontrada');
           setStatus('Autenticado! Redirecionando...');
-          await new Promise(resolve => setTimeout(resolve, 500));
-          router.push('/inicio');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          window.location.href = '/inicio';
         } else {
           console.warn('⚠️ Nenhuma sessão encontrada');
           setStatus('Nenhuma sessão encontrada. Redirecionando...');
