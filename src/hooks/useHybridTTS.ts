@@ -111,8 +111,9 @@ export function useHybridTTS(options: UseGoogleTTSOptions = {}) {
           text,
           voice: options.voice || 'pt-BR-Neural2-B',
           languageCode: options.languageCode || 'pt-BR',
-          speakingRate: options.speakingRate || 0.85,
-          pitch: options.pitch || -2.0,
+          speakingRate: options.speakingRate || 0.90,
+          pitch: options.pitch || -1.0,
+          volumeGainDb: 2.0, // Volume aumentado para clareza máxima
         });
 
         if (!result) {

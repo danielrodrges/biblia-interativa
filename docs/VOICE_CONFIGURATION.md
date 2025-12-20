@@ -10,12 +10,14 @@
 4. **Microsoft/Apple masculinas**
 5. **Qualquer voz pt-BR** (evitando femininas)
 
-### ⚙️ Parâmetros da Voz
+### ⚙️ Parâmetros da Voz (OTIMIZADOS PARA MÁXIMA CLAREZA)
 
 ```typescript
-pitch: 0.85   // Tom grave (masculino profundo e sábio)
-rate: 0.85    // Velocidade pausada (transmite experiência)
-volume: 1.0   // Volume cheio para clareza
+pitch: -1.0         // Tom grave mas claro (não muito profundo)
+rate: 0.90          // Velocidade ideal para articulação
+volume: 2.0         // Volume aumentado para clareza
+sampleRate: 24000   // Alta qualidade de áudio
+effects: ['large-home-entertainment-class-device', 'headphone-class-device']
 ```
 
 ## 🎧 Melhores Vozes por Sistema

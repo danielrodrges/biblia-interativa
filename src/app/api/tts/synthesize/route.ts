@@ -18,9 +18,9 @@ export async function POST(request: NextRequest) {
       text, 
       voice = 'pt-BR-Neural2-B',  // Voz masculina neural (melhor qualidade)
       languageCode = 'pt-BR',
-      speakingRate = 0.85,  // Velocidade pausada
-      pitch = -2.0,         // Tom grave
-      volumeGainDb = 0.0    // Volume normal
+      speakingRate = 0.90,  // Velocidade um pouco mais rápida para clareza
+      pitch = -1.0,         // Tom menos grave para mais nitidez
+      volumeGainDb = 2.0    // Volume aumentado para clareza
     } = body;
 
     if (!text || text.trim().length === 0) {
